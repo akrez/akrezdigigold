@@ -37,4 +37,15 @@ trait Enum
     {
         return array_keys(static::toArray());
     }
+
+    public static function fromString(string $name): ?self
+    {
+        foreach (self::cases() as $case) {
+            if ($case->name === $name) {
+                return $case;
+            }
+        }
+
+        return null;
+    }
 }
