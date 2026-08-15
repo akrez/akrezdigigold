@@ -10,16 +10,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Class Variant
  * 
  * @property int $id
+ * @property int $scrap_id
  * @property int $product_id
  * @property string $seller
  * @property string $carat
  * @property float $size
  * @property int $price
- * @property float $price_per_gram
+ * @property int $price_per_gram
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * 
  * @property Product $product
+ * @property Scrap $scrap
  *
  * @package App\Models
  */
@@ -27,21 +29,22 @@ class Variant extends Model
 {
 	protected $table = 'variants';
 
+	protected $casts = [
+		'scrap_id' => 'int',
+		'product_id' => 'int',
+		'size' => 'float',
+		'price' => 'int',
+		'price_per_gram' => 'int'
+	];
+
 	protected $fillable = [
+		'scrap_id',
 		'product_id',
 		'seller',
 		'carat',
 		'size',
 		'price',
-        'scrap_id',
-        'price_per_gram',
-	];
-
-	protected $casts = [
-		'product_id' => 'int',
-		'size' => 'float',
-		'price' => 'int',
-		'price_per_gram' => 'float'
+		'price_per_gram'
 	];
 
     public function product(): BelongsTo
@@ -50,7 +53,7 @@ class Variant extends Model
 	}
 
     public function scrap(): BelongsTo
-    {
-        return $this->belongsTo(Scrap::class);
-    }
+	{
+		return $this->belongsTo(Scrap::class);
+	}
 }
