@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Class Product
- * 
+ *
  * @property int $id
  * @property int $scrap_id
  * @property int $page_id
@@ -22,47 +22,44 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property Carbon|null $completed_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * 
  * @property Page $page
  * @property Scrap $scrap
  * @property Collection|Variant[] $variants
- *
- * @package App\Models
  */
 class Product extends Model
 {
-	protected $table = 'products';
+    protected $table = 'products';
 
-	protected $casts = [
-		'scrap_id' => 'int',
-		'page_id' => 'int',
-		'page_number' => 'int',
-		'completed_at' => 'datetime'
-	];
+    protected $casts = [
+        'scrap_id' => 'int',
+        'page_id' => 'int',
+        'page_number' => 'int',
+        'completed_at' => 'datetime',
+    ];
 
-	protected $fillable = [
-		'scrap_id',
-		'page_id',
-		'external_id',
-		'title',
-		'image_url',
-		'product_url',
-		'page_number',
-		'completed_at'
-	];
+    protected $fillable = [
+        'scrap_id',
+        'page_id',
+        'external_id',
+        'title',
+        'image_url',
+        'product_url',
+        'page_number',
+        'completed_at',
+    ];
 
-	public function page(): BelongsTo
-	{
-		return $this->belongsTo(Page::class);
-	}
+    public function page(): BelongsTo
+    {
+        return $this->belongsTo(Page::class);
+    }
 
-	public function scrap(): BelongsTo
-	{
-		return $this->belongsTo(Scrap::class);
-	}
+    public function scrap(): BelongsTo
+    {
+        return $this->belongsTo(Scrap::class);
+    }
 
-	public function variants(): HasMany
-	{
-		return $this->hasMany(Variant::class);
-	}
+    public function variants(): HasMany
+    {
+        return $this->hasMany(Variant::class);
+    }
 }

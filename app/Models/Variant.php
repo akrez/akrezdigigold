@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Class Variant
- * 
+ *
  * @property int $id
  * @property int $scrap_id
  * @property int $product_id
@@ -19,41 +19,38 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $price_per_gram
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * 
  * @property Product $product
  * @property Scrap $scrap
- *
- * @package App\Models
  */
 class Variant extends Model
 {
-	protected $table = 'variants';
+    protected $table = 'variants';
 
-	protected $casts = [
-		'scrap_id' => 'int',
-		'product_id' => 'int',
-		'size' => 'float',
-		'price' => 'int',
-		'price_per_gram' => 'int'
-	];
+    protected $casts = [
+        'scrap_id' => 'int',
+        'product_id' => 'int',
+        'size' => 'float',
+        'price' => 'int',
+        'price_per_gram' => 'int',
+    ];
 
-	protected $fillable = [
-		'scrap_id',
-		'product_id',
-		'seller',
-		'carat',
-		'size',
-		'price',
-		'price_per_gram'
-	];
+    protected $fillable = [
+        'scrap_id',
+        'product_id',
+        'seller',
+        'carat',
+        'size',
+        'price',
+        'price_per_gram',
+    ];
 
     public function product(): BelongsTo
-	{
-		return $this->belongsTo(Product::class);
-	}
+    {
+        return $this->belongsTo(Product::class);
+    }
 
     public function scrap(): BelongsTo
-	{
-		return $this->belongsTo(Scrap::class);
-	}
+    {
+        return $this->belongsTo(Scrap::class);
+    }
 }

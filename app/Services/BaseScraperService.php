@@ -116,5 +116,4 @@ abstract class BaseScraperService
             'pricePerGram' => ['r' => $price / $size, 'f' => number_format($price / $size)],
         ];
     }
-
 }

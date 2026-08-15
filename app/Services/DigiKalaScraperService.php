@@ -15,6 +15,9 @@ class DigiKalaScraperService extends BaseScraperService
 
     public function analyze(Scrap $scrap): void
     {
+        if ($this->scrapHasCompleted($scrap)) {
+            return;
+        }
         if (! $this->scrapHasStarted($scrap)) {
             $this->createPages($scrap);
         }
