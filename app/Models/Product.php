@@ -23,6 +23,11 @@ class Product extends Model
         'completed_at' => 'datetime',
     ];
 
+    public function scrap(): BelongsTo
+    {
+        return $this->belongsTo(Scrap::class);
+    }
+
     public function page(): BelongsTo
     {
         return $this->belongsTo(Page::class);

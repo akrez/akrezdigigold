@@ -13,6 +13,7 @@ class Variant extends Model
         'carat',
         'size',
         'price',
+        'scrap_id',
         'price_per_gram',
     ];
 
