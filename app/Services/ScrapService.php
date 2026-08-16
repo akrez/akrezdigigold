@@ -3,14 +3,21 @@
 namespace App\Services;
 
 use App\Enums\CaratEnum;
+use App\Enums\SourceEnum;
 use App\Models\Page;
 use App\Models\Product;
 use App\Models\Scrap;
 use App\Models\Variant;
 use Illuminate\Support\Facades\Log;
 
-abstract class BaseScraperService
+class ScrapService
 {
+    protected function getIncompleteCounts(int $scrapId): int
+    {
+        return Page::where('scrap_id', $scrapId)->whereNull('completed_at')->count() +
+            Product::where('scrap_id', $scrapId)->whereNull('completed_at')->count();
+    }
+
     protected function logError(\Exception|\Throwable $e): void
     {
         Log::error($e->getMessage(), $e->getTrace());
@@ -36,14 +43,28 @@ abstract class BaseScraperService
         return $scrap->update(['started_at' => now()]);
     }
 
-    protected function scrapHasStarted(Scrap $scrap): bool
+    protected function isScrapStarted(Scrap $scrap): bool
     {
         return (bool) $scrap->started_at;
     }
 
-    protected function scrapHasCompleted(Scrap $scrap): bool
+    protected function isScrapCompleted(Scrap $scrap): bool
     {
         return (bool) $scrap->completed_at;
+    }
+
+    public function firstOrCreateScrap(SourceEnum $sourceEnum, string $scrapKey): ?Scrap
+    {
+        try {
+            return Scrap::firstOrCreate([
+                'source' => $sourceEnum->name,
+                'scrap_key' => $scrapKey,
+            ]);
+        } catch (\Exception $e) {
+            $this->logError($e);
+        }
+
+        return null;
     }
 
     protected function savePage(int $scrapId, int $number): ?Page
@@ -71,7 +92,6 @@ abstract class BaseScraperService
                 'title' => $productData['title'],
                 'image_url' => $productData['image_url'] ?? null,
                 'product_url' => $productData['product_url'] ?? null,
-                'page_number' => $productData['page_number'] ?? 0,
             ]);
         } catch (\Exception $e) {
             $this->logError($e);

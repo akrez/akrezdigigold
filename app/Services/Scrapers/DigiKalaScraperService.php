@@ -1,28 +1,32 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Scrapers;
 
 use App\Enums\CaratEnum;
 use App\Models\Page;
 use App\Models\Product;
 use App\Models\Scrap;
+use App\Services\ScrapService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
-class DigiKalaScraperService extends BaseScraperService
+class DigiKalaScraperService extends ScrapService
 {
     protected const API_BASE = 'https://api.digikala.com';
 
     public function analyze(Scrap $scrap): void
     {
-        if ($this->scrapHasCompleted($scrap)) {
+        if ($this->isScrapCompleted($scrap)) {
             return;
         }
-        if (! $this->scrapHasStarted($scrap)) {
-            $this->createPages($scrap);
-        }
-        $this->createProducts($scrap);
-        $this->createVariants($scrap);
+        do {
+            dump($this->getIncompleteCounts($scrap->id));
+            if (! $this->isScrapStarted($scrap)) {
+                $this->createPages($scrap);
+            }
+            $this->createProducts($scrap);
+            $this->createVariants($scrap);
+        } while ($this->getIncompleteCounts($scrap->id) > 0);
         $this->completeScrap($scrap);
     }
 
@@ -97,12 +101,10 @@ class DigiKalaScraperService extends BaseScraperService
         } elseif ($response->successful()) {
             try {
                 foreach ($response->json('data.products', []) as $product) {
-                    $pageNumber = $response->json('data.pager.current_page');
                     $result['ids'][] = $this->saveProduct($scrap->id, $page->id, $product['id'], [
                         'title' => ($product['title_fa'] ?? $product['title'] ?? ''),
                         'image_url' => ($product['images']['main']['url'][0] ?? null),
                         'product_url' => 'https://www.digikala.com/product/'.$product['id'],
-                        'page_number' => $pageNumber,
                     ])?->id;
                     $this->completePage($page);
                 }

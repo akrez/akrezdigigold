@@ -18,7 +18,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $title
  * @property string|null $image_url
  * @property string|null $product_url
- * @property int $page_number
  * @property Carbon|null $completed_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -33,7 +32,6 @@ class Product extends Model
     protected $casts = [
         'scrap_id' => 'int',
         'page_id' => 'int',
-        'page_number' => 'int',
         'completed_at' => 'datetime',
     ];
 
@@ -44,7 +42,6 @@ class Product extends Model
         'title',
         'image_url',
         'product_url',
-        'page_number',
         'completed_at',
     ];
 
