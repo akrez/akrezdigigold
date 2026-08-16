@@ -18,6 +18,13 @@ class ScrapService
             Product::where('scrap_id', $scrapId)->whereNull('completed_at')->count();
     }
 
+    protected function getCompleteCounts(int $scrapId): int
+    {
+        return Page::where('scrap_id', $scrapId)->whereNotNull('completed_at')->count() +
+            Product::where('scrap_id', $scrapId)->whereNotNull('completed_at')->count() +
+            Variant::where('scrap_id', $scrapId)->count();
+    }
+
     protected function logError(\Exception|\Throwable $e): void
     {
         Log::error($e->getMessage(), $e->getTrace());

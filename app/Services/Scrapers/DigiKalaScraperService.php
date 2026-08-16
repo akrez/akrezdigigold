@@ -19,15 +19,19 @@ class DigiKalaScraperService extends ScrapService
         if ($this->isScrapCompleted($scrap)) {
             return;
         }
-        do {
-            dump($this->getIncompleteCounts($scrap->id));
-            if (! $this->isScrapStarted($scrap)) {
-                $this->createPages($scrap);
-            }
-            $this->createProducts($scrap);
-            $this->createVariants($scrap);
-        } while ($this->getIncompleteCounts($scrap->id) > 0);
-        $this->completeScrap($scrap);
+
+        if (! $this->isScrapStarted($scrap)) {
+            $this->createPages($scrap);
+        }
+        $this->createProducts($scrap);
+        $this->createVariants($scrap);
+
+        if (
+            $this->getCompleteCounts($scrap->id) &&
+            ! $this->getIncompleteCounts($scrap->id)
+        ) {
+            $this->completeScrap($scrap);
+        }
     }
 
     protected function callSearch(array $pages): array
