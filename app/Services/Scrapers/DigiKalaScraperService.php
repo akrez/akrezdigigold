@@ -140,7 +140,7 @@ class DigiKalaScraperService extends ScrapService
                                     $this->extractSize($variant),
                                     floatval($variant['price']['selling_price'] ?? 0)
                                 )?->id;
-                                $products[$productId]->update(['completed_at' => now()]);
+                                $this->completeProduct($products[$productId]);
                             }
                         }
                     }
