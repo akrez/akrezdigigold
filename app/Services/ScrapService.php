@@ -107,10 +107,11 @@ class ScrapService
         return null;
     }
 
-    protected function saveVariant(int $productId, CaratEnum $caratEnum, string $seller, float $size, float $price): ?Variant
+    protected function saveVariant(int $scrapId, int $productId, CaratEnum $caratEnum, string $seller, float $size, float $price): ?Variant
     {
         try {
             return Variant::create([
+                'scrap_id' => $scrapId,
                 'product_id' => $productId,
                 'carat' => $caratEnum->name,
                 'seller' => $seller,

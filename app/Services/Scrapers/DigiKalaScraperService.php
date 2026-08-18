@@ -122,7 +122,7 @@ class DigiKalaScraperService extends ScrapService
     {
         Product::where('scrap_id', $scrap->id)
             ->whereNull('completed_at')
-            ->chunkById(60, function ($products) {
+            ->chunkById(60, function ($products) use ($scrap) {
                 try {
 
                     $products = $products->keyBy('id');
@@ -138,6 +138,7 @@ class DigiKalaScraperService extends ScrapService
                         } elseif ($response->successful()) {
                             foreach ($response->json('data.product.variants', []) as $variant) {
                                 $result['ids'] = $this->saveVariant(
+                                    $scrap->id,
                                     $productId,
                                     $this->extractCarat($response->json('data.product')),
                                     ($variant['seller']['title'] ?? ''),
