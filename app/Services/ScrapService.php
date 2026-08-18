@@ -12,6 +12,24 @@ use Illuminate\Support\Facades\Log;
 
 class ScrapService
 {
+    const ERROR_CONNECTION = 0;
+
+    const ERROR_JSON = -1;
+
+    const ERROR_SIZE = -2;
+
+    const ERROR_PRICE = -3;
+
+    const ERROR_CARAT = -4;
+
+    const ERROR_EXTERNAL_ID = -3;
+
+    const ERROR_PRODUCT = -544;
+
+    const ERROR_VARIANT = -544;
+
+    const ERROR_CATCH = -555;
+
     protected function getIncompleteCounts(int $scrapId): int
     {
         return Page::where('scrap_id', $scrapId)->whereNull('http_status')->count() +

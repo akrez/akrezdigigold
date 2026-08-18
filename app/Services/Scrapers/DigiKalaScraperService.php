@@ -71,7 +71,10 @@ class DigiKalaScraperService extends ScrapService
             foreach (range(1, $totalPages) as $pageNumber) {
                 $page = $this->savePage($scrap->id, $pageNumber);
                 if (isset($responses[$pageNumber])) {
-                    $this->createProductByResponse($scrap, $page, $responses[$pageNumber]);
+                    $this->completePage(
+                        $page,
+                        $this->createProductByResponse($scrap, $page, $responses[$pageNumber])
+                    );
                 }
             }
             $this->startScrap($scrap);
@@ -84,13 +87,19 @@ class DigiKalaScraperService extends ScrapService
     {
         try {
             $allPages = Page::where('scrap_id', $scrap->id)
-                ->whereNull('http_status')
+                ->where(function ($q) {
+                    return $q->whereNull('http_status')->orWhereIn('http_status', [429]);
+                })
                 ->get()
                 ->pluck(null, 'number');
             foreach (array_chunk($allPages->pluck('number')->toArray(), 10) as $pageNumbers) {
                 $responses = $this->callSearch($pageNumbers);
                 foreach ($responses as $pageNumber => $response) {
-                    $this->createProductByResponse($scrap, $allPages[$pageNumber], $response);
+                    $page = $allPages[$pageNumber];
+                    $this->completePage(
+                        $page,
+                        $this->createProductByResponse($scrap, $page, $response)
+                    );
                 }
             }
         } catch (\Exception $e) {
@@ -98,61 +107,116 @@ class DigiKalaScraperService extends ScrapService
         }
     }
 
-    protected function createProductByResponse(Scrap $scrap, Page $page, mixed $response)
+    protected function createProductByResponse(Scrap $scrap, Page $page, mixed $response): int
     {
-        if ($response instanceof ConnectionException) {
-            $this->logError($response);
-        } elseif ($response->successful()) {
-            try {
-                foreach ($response->json('data.products', []) as $product) {
-                    $result['ids'][] = $this->saveProduct($scrap->id, $page->id, $product['id'], [
-                        'title' => ($product['title_fa'] ?? $product['title'] ?? ''),
-                        'image_url' => ($product['images']['main']['url'][0] ?? null),
-                        'product_url' => 'https://www.digikala.com/product/'.$product['id'],
-                    ])?->id;
-                    $this->completePage($page);
-                }
-            } catch (\Exception $e) {
-                $this->logError($e);
+        try {
+            if ($response instanceof ConnectionException) {
+                $this->logError($response);
+
+                return static::ERROR_CONNECTION;
             }
+            if (! $response->successful()) {
+                return $response->status();
+            }
+            $items = (array) $response->json('data.products', []);
+            if (empty($items)) {
+                return static::ERROR_JSON;
+            }
+            foreach ($items as $product) {
+                $product = $this->saveProduct($scrap->id, $page->id, $product['id'], [
+                    'title' => ($product['title_fa'] ?? $product['title'] ?? ''),
+                    'image_url' => ($product['images']['main']['url'][0] ?? null),
+                    'product_url' => 'https://www.digikala.com/product/'.$product['id'],
+                ]);
+                if (! $product) {
+                    return static::ERROR_PRODUCT;
+                }
+            }
+
+            return $response->status();
+        } catch (\Exception $e) {
+            $this->logError($e);
         }
+
+        return static::ERROR_CATCH;
     }
 
     public function createVariants(Scrap $scrap): void
     {
         Product::where('scrap_id', $scrap->id)
-            ->whereNull('http_status')
+            ->where(function ($q) {
+                return $q->whereNull('http_status')->orWhereIn('http_status', [429]);
+            })
             ->chunkById(60, function ($products) use ($scrap) {
                 try {
-
                     $products = $products->keyBy('id');
-
                     $responses = Http::pool(fn ($pool) => $products->map(fn ($product) => $pool
                         ->as($product->id)
                         ->withHeaders($this->getHeaders())
                         ->get(self::API_BASE."/v2/product/{$product->external_id}/")
                     )->toArray());
-
                     foreach ($responses as $productId => $response) {
-                        if ($response instanceof ConnectionException) {
-                        } elseif ($response->successful()) {
-                            foreach ($response->json('data.product.variants', []) as $variant) {
-                                $result['ids'] = $this->saveVariant(
-                                    $scrap->id,
-                                    $productId,
-                                    $this->extractCarat($response->json('data.product')),
-                                    ($variant['seller']['title'] ?? ''),
-                                    $this->extractSize($variant),
-                                    floatval($variant['price']['selling_price'] ?? 0)
-                                )?->id;
-                                $this->completeProduct($products[$productId]);
-                            }
-                        }
+                        $product = $products[$productId];
+                        $this->completeProduct(
+                            $product,
+                            $this->processProduct($scrap->id, $product, $response)
+                        );
+
                     }
                 } catch (\Exception $e) {
                     $this->logError($e);
                 }
             });
+    }
+
+    protected function processProduct(int $scrapId, Product $product, $response): int
+    {
+        try {
+            if ($response instanceof ConnectionException) {
+                $this->logError($response);
+
+                return static::ERROR_CONNECTION;
+            }
+            if (! $response->successful()) {
+                return $response->status();
+            }
+            $data = (array) $response->json('data.product.variants', []);
+            if (empty($data)) {
+                return static::ERROR_JSON;
+            }
+            $carat = $this->extractCarat($response->json('data.product'));
+            if ($carat->name == CaratEnum::CARAT_0->name) {
+                return static::ERROR_CARAT;
+            }
+            foreach ($data as $variant) {
+                $size = $this->extractSize($variant);
+                if (empty($size)) {
+                    return static::ERROR_SIZE;
+                }
+                $seller = ($variant['seller']['title'] ?? '');
+                $price = floatval($variant['price']['selling_price'] ?? 0);
+                if ($price <= 0) {
+                    return static::ERROR_PRICE;
+                }
+                $variant = $this->saveVariant(
+                    $scrapId,
+                    $product->id,
+                    $carat,
+                    $seller,
+                    $size,
+                    $price
+                );
+                if (! $variant) {
+                    return static::ERROR_VARIANT;
+                }
+            }
+
+            return $response->status();
+        } catch (\Exception $e) {
+            $this->logError($e);
+        }
+
+        return static::ERROR_CATCH;
     }
 
     protected function extractCarat(array $data): CaratEnum

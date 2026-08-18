@@ -84,20 +84,24 @@ class SnappShopScraperService extends ScrapService
         }
 
         try {
-            // ذخیره صفحه اول
             $page = $this->savePage($scrap->id, 1);
             if (isset($responses[1])) {
-                $this->createProductByResponse($scrap, $page, $responses[1]);
+                $this->completePage(
+                    $page,
+                    $this->createProductByResponse($scrap, $page, $responses[1])
+                );
             }
 
-            // دریافت صفحات دیگر به صورت تکه‌تکه
             $remainingPages = range(2, $totalPages);
             foreach (array_chunk($remainingPages, 50) as $chunk) {
                 $responses = $this->callSearch($chunk);
                 foreach ($responses as $pageNumber => $response) {
                     $page = $this->savePage($scrap->id, $pageNumber);
                     if ($page) {
-                        $this->createProductByResponse($scrap, $page, $response);
+                        $this->completePage(
+                            $page,
+                            $this->createProductByResponse($scrap, $page, $response)
+                        );
                     }
                 }
             }
@@ -112,7 +116,9 @@ class SnappShopScraperService extends ScrapService
     {
         try {
             $allPages = Page::where('scrap_id', $scrap->id)
-                ->whereNull('http_status')
+                ->where(function ($q) {
+                    return $q->whereNull('http_status')->orWhereIn('http_status', [429]);
+                })
                 ->get()
                 ->pluck(null, 'number');
 
@@ -124,7 +130,11 @@ class SnappShopScraperService extends ScrapService
                 $responses = $this->callSearch($pageNumbers);
                 foreach ($responses as $pageNumber => $response) {
                     if (isset($allPages[$pageNumber])) {
-                        $this->createProductByResponse($scrap, $allPages[$pageNumber], $response);
+                        $page = $allPages[$pageNumber];
+                        $this->completePage(
+                            $page,
+                            $this->createProductByResponse($scrap, $page, $response)
+                        );
                     }
                 }
             }
@@ -133,28 +143,26 @@ class SnappShopScraperService extends ScrapService
         }
     }
 
-    protected function createProductByResponse(Scrap $scrap, Page $page, mixed $response): void
+    protected function createProductByResponse(Scrap $scrap, Page $page, mixed $response): int
     {
-        if ($response instanceof ConnectionException) {
-            $this->logError($response);
-
-            return;
-        }
-
-        if (! $response->successful()) {
-            return;
-        }
-
         try {
-            $items = $response->json('data.structure.2.items', []);
+            if ($response instanceof ConnectionException) {
+                $this->logError($response);
+
+                return static::ERROR_CONNECTION;
+            }
+            if (! $response->successful()) {
+                return $response->status();
+            }
+            $items = (array) $response->json('data.structure.2.items', []);
+            if (empty($items)) {
+                return static::ERROR_JSON;
+            }
             foreach ($items as $item) {
-                // استخراج productId از href (مثلاً snp-123456)
                 $productId = str_replace('snp-', '', basename($item['href'] ?? ''));
-
                 if (empty($productId)) {
-                    continue;
+                    return static::ERROR_EXTERNAL_ID;
                 }
-
                 $product = $this->saveProduct(
                     $scrap->id,
                     $page->id,
@@ -165,78 +173,103 @@ class SnappShopScraperService extends ScrapService
                         'product_url' => 'https://snappshop.ir/product/snp-'.$productId,
                     ]
                 );
-
-                if ($product) {
-                    $this->completePage($page);
+                if (! $product) {
+                    return static::ERROR_PRODUCT;
                 }
             }
+
+            return $response->status();
         } catch (\Exception $e) {
             $this->logError($e);
         }
+
+        return static::ERROR_CATCH;
     }
 
     public function createVariants(Scrap $scrap): void
     {
         Product::where('scrap_id', $scrap->id)
-            ->whereNull('http_status')
+            ->where(function ($q) {
+                return $q->whereNull('http_status')->orWhereIn('http_status', [429]);
+            })
             ->chunkById(60, function ($products) use ($scrap) {
                 try {
                     $products = $products->keyBy('external_id');
                     $externalIds = $products->map(fn ($p) => $p->external_id)->toArray();
                     $responses = $this->callProduct($externalIds);
                     foreach ($responses as $productId => $response) {
-                        if ($response instanceof ConnectionException) {
-                            $this->logError($response);
-
-                            continue;
-                        }
-                        if (! $response->successful()) {
-                            continue;
-                        }
-                        $data = $response->json('data', []);
-                        if (empty($data)) {
-                            continue;
-                        }
                         $product = $products[$productId] ?? null;
-                        if (! $product) {
-                            continue;
+                        if ($product) {
+                            $this->completeProduct(
+                                $product,
+                                $this->processProduct($scrap->id, $product, $response)
+                            );
                         }
-                        $carat = $this->extractCarat($data['attributes'] ?? []);
-                        $sellers = [];
-                        foreach ($data['vendors'] ?? [] as $vendor) {
-                            $sellers[$vendor['id']] = $vendor['title'] ?? '';
-                        }
-                        $attributes = [];
-                        foreach ($data['configurable_attribute'] as $configurableAttribute) {
-                            $attributes[$configurableAttribute['value']['id']] = $configurableAttribute['value']['title'];
-                        }
-                        foreach ($data['variants'] ?? [] as $variant) {
-                            $size = $this->extractSize($attributes, $variant['attribute_ids'] ?? []);
-                            if (empty($size)) {
-                                continue;
-                            }
-                            foreach ($variant['vendor'] ?? [] as $vendor) {
-                                $price = floatval(empty($vendor['special_price']) ? ($vendor['price'] ?? 0) : $vendor['special_price']);
-                                if ($price <= 0) {
-                                    continue;
-                                }
-                                $seller = $sellers[$vendor['vendor_id']] ?? '';
-                                $this->saveVariant(
-                                    $scrap->id,
-                                    $product->id,
-                                    $carat,
-                                    $seller,
-                                    $size,
-                                    $price
-                                );
-                            }
-                        }
-                        $this->completeProduct($product);
                     }
                 } catch (\Exception $e) {
                     $this->logError($e);
                 }
             });
+    }
+
+    protected function processProduct(int $scrapId, Product $product, $response): int
+    {
+        try {
+            if ($response instanceof ConnectionException) {
+                $this->logError($response);
+
+                return static::ERROR_CONNECTION;
+            }
+            if (! $response->successful()) {
+                return $response->status();
+            }
+            $data = (array) $response->json('data', []);
+            if (empty($data)) {
+                return static::ERROR_JSON;
+            }
+            $carat = $this->extractCarat($data['attributes'] ?? []);
+            if ($carat->name == CaratEnum::CARAT_0->name) {
+                return static::ERROR_CARAT;
+            }
+            $sellers = [];
+            foreach ($data['vendors'] ?? [] as $vendor) {
+                $sellers[$vendor['id']] = $vendor['title'] ?? '';
+            }
+            $attributes = [];
+            foreach ($data['configurable_attribute'] as $configurableAttribute) {
+                $attributes[$configurableAttribute['value']['id']] = $configurableAttribute['value']['title'];
+            }
+            foreach ($data['variants'] ?? [] as $variant) {
+                $size = $this->extractSize($attributes, $variant['attribute_ids'] ?? []);
+                if (empty($size)) {
+                    return static::ERROR_SIZE;
+                }
+                foreach ($variant['vendor'] ?? [] as $vendor) {
+                    $price = floatval(empty($vendor['special_price']) ? ($vendor['price'] ?? 0) : $vendor['special_price']);
+                    if ($price <= 0) {
+                        return static::ERROR_PRICE;
+                    }
+                    $seller = $sellers[$vendor['vendor_id']] ?? '';
+                    $variant = $this->saveVariant(
+                        $scrapId,
+                        $product->id,
+                        $carat,
+                        $seller,
+                        $size,
+                        $price
+                    );
+                    if (! $variant) {
+                        return static::ERROR_VARIANT;
+                    }
+                }
+            }
+
+            return $response->status();
+        } catch (\Exception $e) {
+            $this->logError($e);
+        }
+
+        return static::ERROR_CATCH;
     }
 
     protected function extractCarat(array $attributes): CaratEnum
@@ -272,6 +305,9 @@ class SnappShopScraperService extends ScrapService
                 $vazn = $attributes[$attributeId['attribute_value_id']];
                 if (strpos($vazn, 'گرم') !== false) {
                     return floatval($this->sanitizeNumber($vazn));
+                }
+                if (strpos($vazn, 'سوت') !== false) {
+                    return floatval($this->sanitizeNumber($vazn)) * 0.001;
                 }
             }
         }
