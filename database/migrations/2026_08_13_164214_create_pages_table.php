@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('pages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('scrap_id')->constrained('scraps')->onDelete('cascade');
-            $table->timestamp('completed_at')->nullable();
+            $table->unsignedSmallInteger('http_status')->nullable();
             $table->unsignedSmallInteger('number');
             $table->timestamps();
 

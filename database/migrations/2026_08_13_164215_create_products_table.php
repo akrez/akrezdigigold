@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('scrap_id')->constrained('scraps')->onDelete('cascade');
             $table->foreignId('page_id')->constrained('pages')->onDelete('cascade');
-            $table->timestamp('completed_at')->nullable();
+            $table->unsignedSmallInteger('http_status')->nullable();
             $table->string('external_id', 100);
             $table->string('title', 512);
             $table->string('image_url', 1024)->nullable();

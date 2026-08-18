@@ -112,7 +112,7 @@ class SnappShopScraperService extends ScrapService
     {
         try {
             $allPages = Page::where('scrap_id', $scrap->id)
-                ->whereNull('completed_at')
+                ->whereNull('http_status')
                 ->get()
                 ->pluck(null, 'number');
 
@@ -178,7 +178,7 @@ class SnappShopScraperService extends ScrapService
     public function createVariants(Scrap $scrap): void
     {
         Product::where('scrap_id', $scrap->id)
-            ->whereNull('completed_at')
+            ->whereNull('http_status')
             ->chunkById(60, function ($products) use ($scrap) {
                 try {
                     $products = $products->keyBy('external_id');

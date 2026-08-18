@@ -14,14 +14,14 @@ class ScrapService
 {
     protected function getIncompleteCounts(int $scrapId): int
     {
-        return Page::where('scrap_id', $scrapId)->whereNull('completed_at')->count() +
-            Product::where('scrap_id', $scrapId)->whereNull('completed_at')->count();
+        return Page::where('scrap_id', $scrapId)->whereNull('http_status')->count() +
+            Product::where('scrap_id', $scrapId)->whereNull('http_status')->count();
     }
 
     protected function getCompleteCounts(int $scrapId): int
     {
-        return Page::where('scrap_id', $scrapId)->whereNotNull('completed_at')->count() +
-            Product::where('scrap_id', $scrapId)->whereNotNull('completed_at')->count() +
+        return Page::where('scrap_id', $scrapId)->whereNotNull('http_status')->count() +
+            Product::where('scrap_id', $scrapId)->whereNotNull('http_status')->count() +
             Variant::where('scrap_id', $scrapId)->count();
     }
 
@@ -35,14 +35,14 @@ class ScrapService
         return $scrap->update(['completed_at' => now()]);
     }
 
-    protected function completeProduct(Product $product): bool
+    protected function completeProduct(Product $product, int $httpStatus): bool
     {
-        return $product->update(['completed_at' => now()]);
+        return $product->update(['http_status' => $httpStatus]);
     }
 
-    protected function completePage(Page $page): bool
+    protected function completePage(Page $page, int $httpStatus): bool
     {
-        return $page->update(['completed_at' => now()]);
+        return $page->update(['http_status' => $httpStatus]);
     }
 
     protected function startScrap(Scrap $scrap): bool

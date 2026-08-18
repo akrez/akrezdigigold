@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $title
  * @property string|null $image_url
  * @property string|null $product_url
- * @property Carbon|null $completed_at
+ * @property int|null $http_status
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Page $page
@@ -32,7 +32,6 @@ class Product extends Model
     protected $casts = [
         'scrap_id' => 'int',
         'page_id' => 'int',
-        'completed_at' => 'datetime',
     ];
 
     protected $fillable = [
@@ -42,7 +41,7 @@ class Product extends Model
         'title',
         'image_url',
         'product_url',
-        'completed_at',
+        'http_status',
     ];
 
     public function page(): BelongsTo

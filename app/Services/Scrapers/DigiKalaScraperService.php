@@ -84,7 +84,7 @@ class DigiKalaScraperService extends ScrapService
     {
         try {
             $allPages = Page::where('scrap_id', $scrap->id)
-                ->whereNull('completed_at')
+                ->whereNull('http_status')
                 ->get()
                 ->pluck(null, 'number');
             foreach (array_chunk($allPages->pluck('number')->toArray(), 10) as $pageNumbers) {
@@ -121,7 +121,7 @@ class DigiKalaScraperService extends ScrapService
     public function createVariants(Scrap $scrap): void
     {
         Product::where('scrap_id', $scrap->id)
-            ->whereNull('completed_at')
+            ->whereNull('http_status')
             ->chunkById(60, function ($products) use ($scrap) {
                 try {
 

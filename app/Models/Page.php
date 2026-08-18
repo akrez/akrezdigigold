@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $id
  * @property int $scrap_id
  * @property int $number
- * @property Carbon|null $completed_at
+ * @property int|null $http_status
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Scrap $scrap
@@ -27,13 +27,12 @@ class Page extends Model
     protected $casts = [
         'scrap_id' => 'int',
         'number' => 'int',
-        'completed_at' => 'datetime',
     ];
 
     protected $fillable = [
         'scrap_id',
         'number',
-        'completed_at',
+        'http_status',
     ];
 
     public function scrap(): BelongsTo
