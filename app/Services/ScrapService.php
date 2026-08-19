@@ -10,7 +10,7 @@ use App\Models\Scrap;
 use App\Models\Variant;
 use Illuminate\Support\Facades\Log;
 
-class ScrapService
+abstract class ScrapService
 {
     const ERROR_CONNECTION = 0;
 
@@ -20,8 +20,12 @@ class ScrapService
 
     const ERROR_CATCH = 5000;
 
-    public function analyze(Scrap $scrap): void
+    public function analyze(string $scrapKey, SourceEnum $sourceEnum): void
     {
+        $scrap = $this->firstOrCreateScrap($scrapKey, $sourceEnum);
+        if (! $scrap) {
+            return;
+        }
         if ($scrap->completed_at) {
             return;
         }
@@ -42,6 +46,12 @@ class ScrapService
         }
     }
 
+    abstract public function createPages(Scrap $scrap): void;
+
+    abstract public function createProducts(Scrap $scrap): void;
+
+    abstract public function createVariants(Scrap $scrap): void;
+
     protected function completePage(Page $page, int $httpStatus): bool
     {
         return $page->update(['http_status' => $httpStatus]);
@@ -57,7 +67,7 @@ class ScrapService
         return $scrap->update(['started_at' => now()]);
     }
 
-    public function firstOrCreateScrap(SourceEnum $sourceEnum, string $scrapKey): ?Scrap
+    public function firstOrCreateScrap(string $scrapKey, SourceEnum $sourceEnum): ?Scrap
     {
         try {
             return Scrap::firstOrCreate([

@@ -18,8 +18,8 @@ return new class extends Migration
             $table->smallInteger('http_status')->nullable();
             $table->string('external_id', 100);
             $table->string('title', 512);
-            $table->string('image_url', 1024)->nullable();
             $table->string('product_url', 1024)->nullable();
+            $table->string('image_url', 1024)->nullable();
             $table->timestamps();
 
             $table->unique(['page_id', 'external_id']);
