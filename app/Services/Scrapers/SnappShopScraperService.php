@@ -155,30 +155,27 @@ class SnappShopScraperService extends ScrapService
                 return $response->status();
             }
             $items = (array) $response->json('data.structure.2.items', []);
-            if (empty($items)) {
-                return static::ERROR_JSON;
-            }
+            $saved = false;
             foreach ($items as $item) {
                 $productId = str_replace('snp-', '', basename($item['href'] ?? ''));
-                if (empty($productId)) {
-                    return static::ERROR_EXTERNAL_ID;
-                }
-                $product = $this->saveProduct(
-                    $scrap->id,
-                    $page->id,
-                    $productId,
-                    [
-                        'title' => $item['title'] ?? '',
-                        'image_url' => $item['image']['src'] ?? null,
-                        'product_url' => 'https://snappshop.ir/product/snp-'.$productId,
-                    ]
-                );
-                if (! $product) {
-                    return static::ERROR_PRODUCT;
+                if ($productId) {
+                    $product = $this->saveProduct(
+                        $scrap->id,
+                        $page->id,
+                        $productId,
+                        [
+                            'title' => $item['title'] ?? '',
+                            'image_url' => $item['image']['src'] ?? null,
+                            'product_url' => 'https://snappshop.ir/product/snp-'.$productId,
+                        ]
+                    );
+                    if ($product) {
+                        $saved = true;
+                    }
                 }
             }
 
-            return $response->status();
+            return $saved ? $response->status() : static::ERROR_JSON;
         } catch (\Exception $e) {
             $this->logError($e);
         }
@@ -224,47 +221,33 @@ class SnappShopScraperService extends ScrapService
                 return $response->status();
             }
             $data = (array) $response->json('data', []);
-            if (empty($data)) {
-                return static::ERROR_JSON;
-            }
-            $carat = $this->extractCarat($data['attributes'] ?? []);
-            if ($carat->name == CaratEnum::CARAT_0->name) {
-                return static::ERROR_CARAT;
-            }
             $sellers = [];
             foreach ($data['vendors'] ?? [] as $vendor) {
                 $sellers[$vendor['id']] = $vendor['title'] ?? '';
             }
             $attributes = [];
-            foreach ($data['configurable_attribute'] as $configurableAttribute) {
+            foreach ($data['configurable_attribute'] ?? [] as $configurableAttribute) {
                 $attributes[$configurableAttribute['value']['id']] = $configurableAttribute['value']['title'];
             }
+            $saved = false;
             foreach ($data['variants'] ?? [] as $variant) {
-                $size = $this->extractSize($attributes, $variant['attribute_ids'] ?? []);
-                if (empty($size)) {
-                    return static::ERROR_SIZE;
-                }
                 foreach ($variant['vendor'] ?? [] as $vendor) {
-                    $price = floatval(empty($vendor['special_price']) ? ($vendor['price'] ?? 0) : $vendor['special_price']);
-                    if ($price <= 0) {
-                        return static::ERROR_PRICE;
-                    }
-                    $seller = $sellers[$vendor['vendor_id']] ?? '';
                     $variant = $this->saveVariant(
                         $scrapId,
                         $product->id,
-                        $carat,
-                        $seller,
-                        $size,
-                        $price
+                        $vendor['vendor_product_info_id'] ?? '',
+                        $this->extractCarat($data['attributes'] ?? []),
+                        trim($sellers[$vendor['vendor_id']] ?? ''),
+                        $this->extractSize($attributes, $variant['attribute_ids'] ?? []),
+                        floatval(empty($vendor['special_price']) ? ($vendor['price'] ?? 0) : $vendor['special_price'])
                     );
                     if (! $variant) {
-                        return static::ERROR_VARIANT;
+                        $saved = true;
                     }
                 }
             }
 
-            return $response->status();
+            return $saved ? $response->status() : static::ERROR_JSON;
         } catch (\Exception $e) {
             $this->logError($e);
         }
@@ -272,7 +255,7 @@ class SnappShopScraperService extends ScrapService
         return static::ERROR_CATCH;
     }
 
-    protected function extractCarat(array $attributes): CaratEnum
+    protected function extractCarat(array $attributes): ?CaratEnum
     {
         foreach ($attributes as $attribute) {
             if (strpos($attribute['title'] ?? '', 'عیار') !== false) {
@@ -295,10 +278,10 @@ class SnappShopScraperService extends ScrapService
             }
         }
 
-        return CaratEnum::CARAT_0;
+        return null;
     }
 
-    protected function extractSize($attributes, $attributeIds)
+    protected function extractSize($attributes, $attributeIds): float
     {
         foreach ($attributeIds as $attributeId) {
             if (isset($attributes[$attributeId['attribute_value_id']])) {
@@ -312,7 +295,7 @@ class SnappShopScraperService extends ScrapService
             }
         }
 
-        return null;
+        return 0;
     }
 
     protected function getHeaders(): array

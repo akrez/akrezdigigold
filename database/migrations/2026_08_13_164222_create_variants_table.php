@@ -15,13 +15,15 @@ return new class extends Migration
             $table->id();
             $table->foreignId('scrap_id')->constrained('scraps')->onDelete('cascade');
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            $table->string('seller', 255);
-            $table->string('carat', 12);
-            $table->decimal('size', 10, 3);
-            $table->unsignedBigInteger('price');
-            $table->unsignedBigInteger('price_per_gram');
+            $table->string('external_id', 100)->nullable();
+            $table->string('seller', 255)->nullable();
+            $table->string('carat', 12)->nullable();
+            $table->decimal('size', 10, 3)->nullable();
+            $table->unsignedBigInteger('price')->nullable();
+            $table->unsignedBigInteger('price_per_gram')->nullable();
             $table->timestamps();
 
+            $table->unique(['product_id', 'external_id']);
             $table->index('price_per_gram');
             $table->index('carat');
         });

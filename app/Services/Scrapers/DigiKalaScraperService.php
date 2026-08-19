@@ -119,21 +119,19 @@ class DigiKalaScraperService extends ScrapService
                 return $response->status();
             }
             $items = (array) $response->json('data.products', []);
-            if (empty($items)) {
-                return static::ERROR_JSON;
-            }
+            $saved = false;
             foreach ($items as $product) {
                 $product = $this->saveProduct($scrap->id, $page->id, $product['id'], [
                     'title' => ($product['title_fa'] ?? $product['title'] ?? ''),
                     'image_url' => ($product['images']['main']['url'][0] ?? null),
                     'product_url' => 'https://www.digikala.com/product/'.$product['id'],
                 ]);
-                if (! $product) {
-                    return static::ERROR_PRODUCT;
+                if ($product) {
+                    $saved = true;
                 }
             }
 
-            return $response->status();
+            return $saved ? $response->status() : static::ERROR_JSON;
         } catch (\Exception $e) {
             $this->logError($e);
         }
@@ -180,38 +178,24 @@ class DigiKalaScraperService extends ScrapService
             if (! $response->successful()) {
                 return $response->status();
             }
-            $data = (array) $response->json('data.product.variants', []);
-            if (empty($data)) {
-                return static::ERROR_JSON;
-            }
-            $carat = $this->extractCarat($response->json('data.product'));
-            if ($carat->name == CaratEnum::CARAT_0->name) {
-                return static::ERROR_CARAT;
-            }
+            $data = (array) $response->json('data.product.variants');
+            $saved = false;
             foreach ($data as $variant) {
-                $size = $this->extractSize($variant);
-                if (empty($size)) {
-                    return static::ERROR_SIZE;
-                }
-                $seller = ($variant['seller']['title'] ?? '');
-                $price = floatval($variant['price']['selling_price'] ?? 0);
-                if ($price <= 0) {
-                    return static::ERROR_PRICE;
-                }
                 $variant = $this->saveVariant(
                     $scrapId,
                     $product->id,
-                    $carat,
-                    $seller,
-                    $size,
-                    $price
+                    $variant['id'] ?? '',
+                    $this->extractCarat($response->json('data.product')),
+                    trim($variant['seller']['title'] ?? null),
+                    $this->extractSize($variant),
+                    floatval($variant['price']['selling_price'] ?? 0)
                 );
-                if (! $variant) {
-                    return static::ERROR_VARIANT;
+                if ($variant) {
+                    $saved = true;
                 }
             }
 
-            return $response->status();
+            return $saved ? $response->status() : static::ERROR_JSON;
         } catch (\Exception $e) {
             $this->logError($e);
         }
@@ -219,7 +203,7 @@ class DigiKalaScraperService extends ScrapService
         return static::ERROR_CATCH;
     }
 
-    protected function extractCarat(array $data): CaratEnum
+    protected function extractCarat(array $data): ?CaratEnum
     {
         foreach ($data['specifications'] as $specification) {
             foreach ($specification['attributes'] as $attribute) {
@@ -246,14 +230,14 @@ class DigiKalaScraperService extends ScrapService
             }
         }
 
-        return CaratEnum::CARAT_0;
+        return null;
     }
 
-    protected function extractSize(array $data): ?float
+    protected function extractSize(array $data): float
     {
         return isset($data['size']['title'])
             ? floatval($this->sanitizeNumber($data['size']['title']))
-            : null;
+            : 0;
     }
 
     protected function getHeaders()

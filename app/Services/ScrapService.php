@@ -14,21 +14,11 @@ class ScrapService
 {
     const ERROR_CONNECTION = 0;
 
-    const ERROR_JSON = -1;
+    const ERROR_JSON = 1;
 
-    const ERROR_SIZE = -2;
+    const ERROR_CARAT = 4;
 
-    const ERROR_PRICE = -3;
-
-    const ERROR_CARAT = -4;
-
-    const ERROR_EXTERNAL_ID = -3;
-
-    const ERROR_PRODUCT = -544;
-
-    const ERROR_VARIANT = -544;
-
-    const ERROR_CATCH = -555;
+    const ERROR_CATCH = 5000;
 
     protected function getIncompleteCounts(int $scrapId): int
     {
@@ -125,17 +115,19 @@ class ScrapService
         return null;
     }
 
-    protected function saveVariant(int $scrapId, int $productId, CaratEnum $caratEnum, string $seller, float $size, float $price): ?Variant
+    protected function saveVariant(int $scrapId, int $productId, string $externalId, ?CaratEnum $caratEnum, string $seller, float $size, float $price): ?Variant
     {
         try {
-            return Variant::create([
+            return Variant::updateOrCreate([
                 'scrap_id' => $scrapId,
                 'product_id' => $productId,
-                'carat' => $caratEnum->name,
-                'seller' => $seller,
-                'size' => $size,
-                'price' => $price,
-                'price_per_gram' => $price / $size,
+                'external_id' => $externalId ?: null,
+            ], [
+                'carat' => ($caratEnum ? $caratEnum->name : null),
+                'seller' => $seller ?: null,
+                'size' => $size ?: null,
+                'price' => $price ?: null,
+                'price_per_gram' => (($caratEnum && $seller && $price && $size) ? ($price / $size) : null),
             ]);
         } catch (\Exception $e) {
             $this->logError($e);

@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $scrap_id
  * @property int $product_id
  * @property string $seller
+ * @property string $external_id
  * @property string $carat
  * @property float $size
  * @property int $price
@@ -38,6 +39,7 @@ class Variant extends Model
         'scrap_id',
         'product_id',
         'seller',
+        'external_id',
         'carat',
         'size',
         'price',
