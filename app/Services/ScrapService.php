@@ -37,6 +37,7 @@ abstract class ScrapService
         $this->createVariants($scrap);
 
         if (
+            $scrap->started_at &&
             (Page::notPending($scrap->id)->count() > 0) &&
             (Product::notPending($scrap->id)->count() > 0) &&
             (Page::pending($scrap->id)->count() == 0) &&
