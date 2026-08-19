@@ -14,26 +14,6 @@ class SnappShopScraperService extends ScrapService
 {
     protected const API_BASE = 'https://apix.snappshop.ir';
 
-    public function analyze(Scrap $scrap): void
-    {
-        if ($this->isScrapCompleted($scrap)) {
-            return;
-        }
-
-        if (! $this->isScrapStarted($scrap)) {
-            $this->createPages($scrap);
-        }
-        $this->createProducts($scrap);
-        $this->createVariants($scrap);
-
-        if (
-            $this->getCompleteCounts($scrap->id) &&
-            ! $this->getIncompleteCounts($scrap->id)
-        ) {
-            $this->completeScrap($scrap);
-        }
-    }
-
     protected function callPage(array $pages): array
     {
         return Http::pool(fn ($pool) => collect($pages)->map(fn ($page) => $pool->as($page)
@@ -94,10 +74,7 @@ class SnappShopScraperService extends ScrapService
     public function createProducts(Scrap $scrap): void
     {
         try {
-            $allPages = Page::where('scrap_id', $scrap->id)
-                ->where(function ($q) {
-                    return $q->whereNull('http_status')->orWhereIn('http_status', [429]);
-                })
+            $allPages = Page::pending($scrap->id)
                 ->get()
                 ->pluck(null, 'number');
 
@@ -164,10 +141,7 @@ class SnappShopScraperService extends ScrapService
 
     public function createVariants(Scrap $scrap): void
     {
-        Product::where('scrap_id', $scrap->id)
-            ->where(function ($q) {
-                return $q->whereNull('http_status')->orWhereIn('http_status', [429]);
-            })
+        Product::pending($scrap->id)
             ->chunkById(60, function ($products) use ($scrap) {
                 try {
                     $products = $products->keyBy('external_id');

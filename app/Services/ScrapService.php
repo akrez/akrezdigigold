@@ -20,22 +20,26 @@ class ScrapService
 
     const ERROR_CATCH = 5000;
 
-    protected function getIncompleteCounts(int $scrapId): int
+    public function analyze(Scrap $scrap): void
     {
-        return Page::where('scrap_id', $scrapId)->whereNull('http_status')->count() +
-            Product::where('scrap_id', $scrapId)->whereNull('http_status')->count();
-    }
+        if ($scrap->completed_at) {
+            return;
+        }
 
-    protected function getCompleteCounts(int $scrapId): int
-    {
-        return Page::where('scrap_id', $scrapId)->whereNotNull('http_status')->count() +
-            Product::where('scrap_id', $scrapId)->whereNotNull('http_status')->count() +
-            Variant::where('scrap_id', $scrapId)->count();
-    }
+        if (! $scrap->started_at) {
+            $this->createPages($scrap);
+        }
+        $this->createProducts($scrap);
+        $this->createVariants($scrap);
 
-    protected function completeScrap(Scrap $scrap): bool
-    {
-        return $scrap->update(['completed_at' => now()]);
+        if (
+            (Page::notPending($scrap->id)->count() > 0) &&
+            (Product::notPending($scrap->id)->count() > 0) &&
+            (Page::pending($scrap->id)->count() == 0) &&
+            (Product::pending($scrap->id)->count() == 0)
+        ) {
+            $scrap->update(['completed_at' => now()]);
+        }
     }
 
     protected function completePage(Page $page, int $httpStatus): bool
@@ -51,16 +55,6 @@ class ScrapService
     protected function startScrap(Scrap $scrap): bool
     {
         return $scrap->update(['started_at' => now()]);
-    }
-
-    protected function isScrapStarted(Scrap $scrap): bool
-    {
-        return (bool) $scrap->started_at;
-    }
-
-    protected function isScrapCompleted(Scrap $scrap): bool
-    {
-        return (bool) $scrap->completed_at;
     }
 
     public function firstOrCreateScrap(SourceEnum $sourceEnum, string $scrapKey): ?Scrap

@@ -44,6 +44,15 @@ class Product extends Model
         'http_status',
     ];
 
+    public function scopePending($query, int $scrapId)
+    {
+        return $query->where('scrap_id', $scrapId)
+            ->where(function ($q) {
+                $q->whereNull('http_status')
+                    ->orWhereIn('http_status', [429]);
+            });
+    }
+
     public function page(): BelongsTo
     {
         return $this->belongsTo(Page::class);
