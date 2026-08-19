@@ -49,7 +49,7 @@ class Product extends Model
         return $query->where('scrap_id', $scrapId)
             ->whereNot(function ($q) {
                 $q->whereNull('http_status')
-                    ->orWhereIn('http_status', [429]);
+                    ->orWhereIn('http_status', [0, 429]);
             });
     }
 
@@ -58,7 +58,7 @@ class Product extends Model
         return $query->where('scrap_id', $scrapId)
             ->where(function ($q) {
                 $q->whereNull('http_status')
-                    ->orWhereIn('http_status', [429]);
+                    ->orWhereIn('http_status', [0, 429]);
             });
     }
 
