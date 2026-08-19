@@ -9,7 +9,7 @@ use App\Models\Scrap;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
-class DigiKalaScraperService extends ScrapService
+class DigiKalaScraperService extends ScraperService
 {
     protected const API_BASE = 'https://api.digikala.com';
 

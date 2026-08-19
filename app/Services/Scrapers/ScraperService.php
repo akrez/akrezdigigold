@@ -10,7 +10,7 @@ use App\Models\Scrap;
 use App\Models\Variant;
 use Illuminate\Support\Facades\Log;
 
-abstract class ScrapService
+abstract class ScraperService
 {
     const ERROR_CONNECTION = 0;
 

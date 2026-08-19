@@ -9,7 +9,7 @@ use App\Models\Scrap;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
-class SnappShopScraperService extends ScrapService
+class SnappShopScraperService extends ScraperService
 {
     protected const API_BASE = 'https://apix.snappshop.ir';
 
