@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Scrapers;
 
 use App\Enums\CaratEnum;
 use App\Enums\SourceEnum;
@@ -19,6 +19,43 @@ abstract class ScrapService
     const ERROR_CARAT = 4;
 
     const ERROR_CATCH = 5000;
+
+    public function summarize(string $scrapKey): array
+    {
+        $result = array_fill_keys(CaratEnum::names(), []);
+
+        Variant::query()
+            ->whereHas('scrap', fn ($q) => $q
+                ->where('scrap_key', $scrapKey)
+                ->whereNotNull('completed_at')
+            )
+            ->with(['product'])
+            ->whereNotNull('carat')
+            ->where('size', '>', 0)
+            ->where('price_per_gram', '>', 0)
+            ->orderBy('price_per_gram')
+            ->get()
+            ->each(function ($variant) use (&$result) {
+                $price = intval($variant->price);
+                $pricePerGram = intval($price / $variant->size);
+                $result[$variant->carat][] = [
+                    'ttl' => $variant->product->title,
+                    'siz' => $variant->size,
+                    'url' => $variant->product->product_url,
+                    'img' => $variant->product->image_url,
+                    'sel' => $variant->seller,
+                    'src' => $variant->scrap->source,
+                    //
+                    'prcr' => $price,
+                    'prcf' => number_format(intval($price / 10)),
+                    //
+                    'ppgr' => $pricePerGram,
+                    'ppgf' => number_format(intval($pricePerGram / 10)),
+                ];
+            });
+
+        return $result;
+    }
 
     public function analyze(string $scrapKey, SourceEnum $sourceEnum): void
     {
@@ -144,19 +181,5 @@ abstract class ScrapService
     protected function sanitizeNumber(string $string): string
     {
         return preg_replace('/[^\\d.]+/', '', $string);
-    }
-
-    protected function formatItem(string $title, float $size, string $url, ?string $image, string $seller, float $price): array
-    {
-        return [
-            'title' => $title,
-            'size' => $size,
-            'url' => $url,
-            'image' => $image,
-            'seller' => $seller,
-            'source' => $this->source->value,
-            'price' => ['r' => $price, 'f' => number_format($price)],
-            'pricePerGram' => ['r' => $price / $size, 'f' => number_format($price / $size)],
-        ];
     }
 }
