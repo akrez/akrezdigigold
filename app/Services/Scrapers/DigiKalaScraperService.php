@@ -48,39 +48,43 @@ class DigiKalaScraperService extends ScrapService
 
     public function createPages(Scrap $scrap): void
     {
-        $responses = $this->callSearch([1]);
-
-        $totalPages = null;
-        try {
-            foreach ($responses as $response) {
-                if ($response instanceof ConnectionException) {
-                    $this->logError($response);
-                } elseif ($response->successful()) {
-                    $totalPages = $response->json('data.pager.total_pages');
-                }
-            }
-        } catch (\Exception $e) {
-            $this->logError($e);
-        }
-
-        if (empty($totalPages)) {
+        $totalPages = $this->processPages($scrap, 1, 1);
+        if ($totalPages <= 1) {
             return;
         }
 
+        $totalPages = $this->processPages($scrap, 2, $totalPages);
+
+        $this->startScrap($scrap);
+    }
+
+    protected function processPages(Scrap $scrap, int $start, int $end)
+    {
+        $totalPages = 0;
         try {
-            foreach (range(1, $totalPages) as $pageNumber) {
-                $page = $this->savePage($scrap->id, $pageNumber);
-                if (isset($responses[$pageNumber])) {
-                    $this->completePage(
-                        $page,
-                        $this->createProductByResponse($scrap, $page, $responses[$pageNumber])
-                    );
+            $remainingPages = range($start, $end);
+            foreach (array_chunk($remainingPages, 50) as $chunk) {
+                $responses = $this->callSearch($chunk);
+                foreach ($responses as $pageNumber => $response) {
+                    if ($response instanceof ConnectionException) {
+                        $this->logError($response);
+                    } elseif ($response->successful()) {
+                        $totalPages = intval($totalPages ?: $response->json('data.pager.total_pages'));
+                        $page = $this->savePage($scrap->id, $pageNumber);
+                        if ($page) {
+                            $this->completePage(
+                                $page,
+                                $this->createProductByResponse($scrap, $page, $response)
+                            );
+                        }
+                    }
                 }
             }
-            $this->startScrap($scrap);
         } catch (\Exception $e) {
             $this->logError($e);
         }
+
+        return $totalPages;
     }
 
     public function createProducts(Scrap $scrap): void
