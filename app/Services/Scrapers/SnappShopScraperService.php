@@ -50,18 +50,6 @@ class SnappShopScraperService extends ScrapService
         )->toArray());
     }
 
-    public function callProduct(array $productIds): array
-    {
-        return Http::pool(fn ($pool) => collect($productIds)->map(fn ($productId) => $pool->as($productId)
-            ->withHeaders($this->getHeaders())
-            ->timeout(30)
-            ->get(self::API_BASE.'/products/v2/'.$productId, [
-                'lat' => 35.00,
-                'lng' => 51.00,
-            ])
-        )->toArray());
-    }
-
     public function createPages(Scrap $scrap): void
     {
         $totalPages = $this->processPages($scrap, 1, 1);
@@ -198,6 +186,18 @@ class SnappShopScraperService extends ScrapService
                     $this->logError($e);
                 }
             });
+    }
+
+    protected function callProduct(array $productIds): array
+    {
+        return Http::pool(fn ($pool) => collect($productIds)->map(fn ($productId) => $pool->as($productId)
+            ->withHeaders($this->getHeaders())
+            ->timeout(30)
+            ->get(self::API_BASE.'/products/v2/'.$productId, [
+                'lat' => 35.00,
+                'lng' => 51.00,
+            ])
+        )->toArray());
     }
 
     protected function processProduct(int $scrapId, Product $product, $response): int

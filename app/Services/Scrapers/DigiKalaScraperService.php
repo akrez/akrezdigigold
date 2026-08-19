@@ -151,24 +151,31 @@ class DigiKalaScraperService extends ScrapService
             })
             ->chunkById(60, function ($products) use ($scrap) {
                 try {
-                    $products = $products->keyBy('id');
-                    $responses = Http::pool(fn ($pool) => $products->map(fn ($product) => $pool
-                        ->as($product->id)
-                        ->withHeaders($this->getHeaders())
-                        ->get(self::API_BASE."/v2/product/{$product->external_id}/")
-                    )->toArray());
+                    $products = $products->keyBy('external_id');
+                    $externalIds = $products->map(fn ($p) => $p->external_id)->toArray();
+                    $responses = $this->callProduct($externalIds);
                     foreach ($responses as $productId => $response) {
-                        $product = $products[$productId];
-                        $this->completeProduct(
-                            $product,
-                            $this->processProductVariants($scrap->id, $product, $response)
-                        );
-
+                        $product = $products[$productId] ?? null;
+                        if ($product) {
+                            $this->completeProduct(
+                                $product,
+                                $this->processProductVariants($scrap->id, $product, $response)
+                            );
+                        }
                     }
                 } catch (\Exception $e) {
                     $this->logError($e);
                 }
             });
+    }
+
+    protected function callProduct(array $productIds): array
+    {
+        return Http::pool(fn ($pool) => collect($productIds)->map(fn ($productId) => $pool->as($productId)
+            ->withHeaders($this->getHeaders())
+            ->timeout(30)
+            ->get(self::API_BASE."/v2/product/{$productId}/")
+        )->toArray());
     }
 
     protected function processProductVariants(int $scrapId, Product $product, $response): int
