@@ -86,7 +86,7 @@ class SnappShopScraperService extends ScrapService
                         $this->logError($response);
                     } elseif ($response->successful()) {
                         $totalPages = intval($totalPages ?: $response->json('data.structure.2.pagination.total_pages'));
-                        $page = $this->savePage($scrap->id, $pageNumber);
+                        $page = $this->updateOrCreatePage($scrap->id, $pageNumber);
                         if ($page) {
                             $this->completePage(
                                 $page,
@@ -150,7 +150,7 @@ class SnappShopScraperService extends ScrapService
             foreach ($items as $item) {
                 $productId = str_replace('snp-', '', basename($item['href'] ?? ''));
                 if ($productId) {
-                    $product = $this->saveProduct(
+                    $product = $this->updateOrCreateProduct(
                         $scrap->id,
                         $page->id,
                         $productId,
@@ -223,7 +223,7 @@ class SnappShopScraperService extends ScrapService
             $saved = false;
             foreach ($data['variants'] ?? [] as $variant) {
                 foreach ($variant['vendor'] ?? [] as $vendor) {
-                    $variant = $this->saveVariant(
+                    $variant = $this->updateOrCreateVariant(
                         $scrapId,
                         $product->id,
                         $vendor['vendor_product_info_id'] ?? '',

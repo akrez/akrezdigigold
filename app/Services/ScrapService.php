@@ -33,24 +33,19 @@ class ScrapService
             Variant::where('scrap_id', $scrapId)->count();
     }
 
-    protected function logError(\Exception|\Throwable $e): void
-    {
-        Log::error($e->getMessage(), $e->getTrace());
-    }
-
     protected function completeScrap(Scrap $scrap): bool
     {
         return $scrap->update(['completed_at' => now()]);
     }
 
-    protected function completeProduct(Product $product, int $httpStatus): bool
-    {
-        return $product->update(['http_status' => $httpStatus]);
-    }
-
     protected function completePage(Page $page, int $httpStatus): bool
     {
         return $page->update(['http_status' => $httpStatus]);
+    }
+
+    protected function completeProduct(Product $product, int $httpStatus): bool
+    {
+        return $product->update(['http_status' => $httpStatus]);
     }
 
     protected function startScrap(Scrap $scrap): bool
@@ -82,7 +77,7 @@ class ScrapService
         return null;
     }
 
-    protected function savePage(int $scrapId, int $number): ?Page
+    protected function updateOrCreatePage(int $scrapId, int $number): ?Page
     {
         try {
             return Page::updateOrCreate([
@@ -96,7 +91,7 @@ class ScrapService
         return null;
     }
 
-    protected function saveProduct(int $scrapId, int $pageId, string $externalId, array $productData): ?Product
+    protected function updateOrCreateProduct(int $scrapId, int $pageId, string $externalId, array $productData): ?Product
     {
         try {
             return Product::updateOrCreate([
@@ -115,7 +110,7 @@ class ScrapService
         return null;
     }
 
-    protected function saveVariant(int $scrapId, int $productId, string $externalId, ?CaratEnum $caratEnum, string $seller, float $size, float $price): ?Variant
+    protected function updateOrCreateVariant(int $scrapId, int $productId, string $externalId, ?CaratEnum $caratEnum, string $seller, float $size, float $price): ?Variant
     {
         try {
             return Variant::updateOrCreate([
@@ -134,6 +129,11 @@ class ScrapService
         }
 
         return null;
+    }
+
+    protected function logError(\Exception|\Throwable $e): void
+    {
+        Log::error($e->getMessage(), $e->getTrace());
     }
 
     protected function sanitizeNumber(string $string): string

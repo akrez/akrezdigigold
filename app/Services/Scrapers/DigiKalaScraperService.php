@@ -70,7 +70,7 @@ class DigiKalaScraperService extends ScrapService
                         $this->logError($response);
                     } elseif ($response->successful()) {
                         $totalPages = intval($totalPages ?: $response->json('data.pager.total_pages'));
-                        $page = $this->savePage($scrap->id, $pageNumber);
+                        $page = $this->updateOrCreatePage($scrap->id, $pageNumber);
                         if ($page) {
                             $this->completePage(
                                 $page,
@@ -125,7 +125,7 @@ class DigiKalaScraperService extends ScrapService
             $items = (array) $response->json('data.products', []);
             $saved = false;
             foreach ($items as $product) {
-                $product = $this->saveProduct($scrap->id, $page->id, $product['id'], [
+                $product = $this->updateOrCreateProduct($scrap->id, $page->id, $product['id'], [
                     'title' => ($product['title_fa'] ?? $product['title'] ?? ''),
                     'image_url' => ($product['images']['main']['url'][0] ?? null),
                     'product_url' => 'https://www.digikala.com/product/'.$product['id'],
@@ -185,7 +185,7 @@ class DigiKalaScraperService extends ScrapService
             $data = (array) $response->json('data.product.variants');
             $saved = false;
             foreach ($data as $variant) {
-                $variant = $this->saveVariant(
+                $variant = $this->updateOrCreateVariant(
                     $scrapId,
                     $product->id,
                     $variant['id'] ?? '',
