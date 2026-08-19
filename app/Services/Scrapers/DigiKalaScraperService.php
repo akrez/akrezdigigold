@@ -6,7 +6,6 @@ use App\Enums\CaratEnum;
 use App\Models\Page;
 use App\Models\Product;
 use App\Models\Scrap;
-use App\Services\ScrapService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
