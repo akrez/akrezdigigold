@@ -64,52 +64,43 @@ class SnappShopScraperService extends ScrapService
 
     public function createPages(Scrap $scrap): void
     {
-        $responses = $this->callSearch([1]);
-
-        $totalPages = null;
-        try {
-            foreach ($responses as $response) {
-                if ($response instanceof ConnectionException) {
-                    $this->logError($response);
-                } elseif ($response->successful()) {
-                    $totalPages = $response->json('data.structure.2.pagination.total_pages');
-                }
-            }
-        } catch (\Exception $e) {
-            $this->logError($e);
-        }
-
-        if (empty($totalPages)) {
+        $totalPages = $this->processPages($scrap, 1, 1);
+        if ($totalPages <= 1) {
             return;
         }
 
-        try {
-            $page = $this->savePage($scrap->id, 1);
-            if (isset($responses[1])) {
-                $this->completePage(
-                    $page,
-                    $this->createProductByResponse($scrap, $page, $responses[1])
-                );
-            }
+        $totalPages = $this->processPages($scrap, 2, $totalPages);
 
-            $remainingPages = range(2, $totalPages);
+        $this->startScrap($scrap);
+    }
+
+    protected function processPages(Scrap $scrap, int $start, int $end)
+    {
+        $totalPages = 0;
+        try {
+            $remainingPages = range($start, $end);
             foreach (array_chunk($remainingPages, 50) as $chunk) {
                 $responses = $this->callSearch($chunk);
                 foreach ($responses as $pageNumber => $response) {
-                    $page = $this->savePage($scrap->id, $pageNumber);
-                    if ($page) {
-                        $this->completePage(
-                            $page,
-                            $this->createProductByResponse($scrap, $page, $response)
-                        );
+                    if ($response instanceof ConnectionException) {
+                        $this->logError($response);
+                    } elseif ($response->successful()) {
+                        $totalPages = intval($totalPages ?: $response->json('data.structure.2.pagination.total_pages'));
+                        $page = $this->savePage($scrap->id, $pageNumber);
+                        if ($page) {
+                            $this->completePage(
+                                $page,
+                                $this->createProductByResponse($scrap, $page, $response)
+                            );
+                        }
                     }
                 }
             }
-
-            $this->startScrap($scrap);
         } catch (\Exception $e) {
             $this->logError($e);
         }
+
+        return $totalPages;
     }
 
     public function createProducts(Scrap $scrap): void
@@ -241,7 +232,7 @@ class SnappShopScraperService extends ScrapService
                         $this->extractSize($attributes, $variant['attribute_ids'] ?? []),
                         floatval(empty($vendor['special_price']) ? ($vendor['price'] ?? 0) : $vendor['special_price'])
                     );
-                    if (! $variant) {
+                    if ($variant) {
                         $saved = true;
                     }
                 }
