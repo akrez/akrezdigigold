@@ -34,7 +34,7 @@ class SnappShopScraperService extends ScrapService
         }
     }
 
-    protected function callSearch(array $pages): array
+    protected function callPage(array $pages): array
     {
         return Http::pool(fn ($pool) => collect($pages)->map(fn ($page) => $pool->as($page)
             ->withHeaders($this->getHeaders())
@@ -80,7 +80,7 @@ class SnappShopScraperService extends ScrapService
         try {
             $remainingPages = range($start, $end);
             foreach (array_chunk($remainingPages, 50) as $chunk) {
-                $responses = $this->callSearch($chunk);
+                $responses = $this->callPage($chunk);
                 foreach ($responses as $pageNumber => $response) {
                     if ($response instanceof ConnectionException) {
                         $this->logError($response);
@@ -118,7 +118,7 @@ class SnappShopScraperService extends ScrapService
             }
 
             foreach (array_chunk($allPages->pluck('number')->toArray(), 10) as $pageNumbers) {
-                $responses = $this->callSearch($pageNumbers);
+                $responses = $this->callPage($pageNumbers);
                 foreach ($responses as $pageNumber => $response) {
                     if (isset($allPages[$pageNumber])) {
                         $page = $allPages[$pageNumber];

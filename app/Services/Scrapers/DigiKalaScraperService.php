@@ -34,7 +34,7 @@ class DigiKalaScraperService extends ScrapService
         }
     }
 
-    protected function callSearch(array $pages): array
+    protected function callPage(array $pages): array
     {
         return Http::pool(fn ($pool) => collect($pages)->map(fn ($page) => $pool->as($page)
             ->withHeaders($this->getHeaders())
@@ -64,7 +64,7 @@ class DigiKalaScraperService extends ScrapService
         try {
             $remainingPages = range($start, $end);
             foreach (array_chunk($remainingPages, 50) as $chunk) {
-                $responses = $this->callSearch($chunk);
+                $responses = $this->callPage($chunk);
                 foreach ($responses as $pageNumber => $response) {
                     if ($response instanceof ConnectionException) {
                         $this->logError($response);
@@ -97,7 +97,7 @@ class DigiKalaScraperService extends ScrapService
                 ->get()
                 ->pluck(null, 'number');
             foreach (array_chunk($allPages->pluck('number')->toArray(), 10) as $pageNumbers) {
-                $responses = $this->callSearch($pageNumbers);
+                $responses = $this->callPage($pageNumbers);
                 foreach ($responses as $pageNumber => $response) {
                     $page = $allPages[$pageNumber];
                     $this->completePage(
@@ -161,7 +161,7 @@ class DigiKalaScraperService extends ScrapService
                         $product = $products[$productId];
                         $this->completeProduct(
                             $product,
-                            $this->processProduct($scrap->id, $product, $response)
+                            $this->processProductVariants($scrap->id, $product, $response)
                         );
 
                     }
@@ -171,7 +171,7 @@ class DigiKalaScraperService extends ScrapService
             });
     }
 
-    protected function processProduct(int $scrapId, Product $product, $response): int
+    protected function processProductVariants(int $scrapId, Product $product, $response): int
     {
         try {
             if ($response instanceof ConnectionException) {
