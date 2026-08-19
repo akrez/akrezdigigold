@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -44,7 +45,7 @@ class Product extends Model
         'http_status',
     ];
 
-    public function scopeNotPending($query, int $scrapId)
+    public function scopeNotPending(Builder $query, int $scrapId)
     {
         return $query->where('scrap_id', $scrapId)
             ->whereNot(function ($q) {
@@ -53,7 +54,7 @@ class Product extends Model
             });
     }
 
-    public function scopePending($query, int $scrapId)
+    public function scopePending(Builder $query, int $scrapId)
     {
         return $query->where('scrap_id', $scrapId)
             ->where(function ($q) {
