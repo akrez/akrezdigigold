@@ -207,7 +207,7 @@ class SnappShopScraperService extends ScrapService
                         $this->extractCarat($data['attributes'] ?? []),
                         trim($sellers[$vendor['vendor_id']] ?? ''),
                         $this->extractSize($attributes, $variant['attribute_ids'] ?? []),
-                        floatval(empty($vendor['special_price']) ? ($vendor['price'] ?? 0) : $vendor['special_price'])
+                        floatval(empty($vendor['special_price']) ? ($vendor['price'] ?? 0) : $vendor['special_price']) * 10
                     );
                     if ($variant) {
                         $saved = true;
