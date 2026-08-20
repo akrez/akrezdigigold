@@ -20,14 +20,14 @@ abstract class ScraperService
 
     const ERROR_CATCH = 5000;
 
-    public function analyze(string $scrapKey, SourceEnum $sourceEnum): void
+    public function analyze(string $scrapKey, SourceEnum $sourceEnum): int
     {
         $scrap = $this->firstOrCreateScrap($scrapKey, $sourceEnum);
         if (! $scrap) {
-            return;
+            return 404;
         }
         if ($scrap->completed_at) {
-            return;
+            return 200;
         }
 
         if (! $scrap->started_at) {
@@ -44,7 +44,11 @@ abstract class ScraperService
             (Product::pending($scrap->id)->count() == 0)
         ) {
             $scrap->update(['completed_at' => now()]);
+
+            return 201;
         }
+
+        return 202;
     }
 
     abstract public function createPages(Scrap $scrap): void;
