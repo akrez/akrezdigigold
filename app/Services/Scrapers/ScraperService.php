@@ -18,11 +18,11 @@ abstract class ScraperService
 
     const ERROR_CARAT = 4;
 
-    const ERROR_CATCH = 5000;
+    const ERROR_CATCH = 50;
 
-    public function analyze(string $scrapKey, SourceEnum $sourceEnum): int
+    public function analyze(string $scrapKey): int
     {
-        $scrap = $this->firstOrCreateScrap($scrapKey, $sourceEnum);
+        $scrap = $this->firstOrCreateScrap($scrapKey, $this->getSourceEnum());
         if (! $scrap) {
             return 404;
         }
@@ -50,6 +50,8 @@ abstract class ScraperService
 
         return 202;
     }
+
+    abstract public function getSourceEnum(): SourceEnum;
 
     abstract public function createPages(Scrap $scrap): void;
 
