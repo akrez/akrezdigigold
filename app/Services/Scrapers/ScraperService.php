@@ -30,9 +30,7 @@ abstract class ScraperService
             return 200;
         }
 
-        if (! $scrap->started_at) {
-            $this->createPages($scrap);
-        }
+        $this->createPages($scrap);
         $this->createProducts($scrap);
         $this->createVariants($scrap);
 

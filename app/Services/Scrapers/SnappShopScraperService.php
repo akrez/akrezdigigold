@@ -37,17 +37,19 @@ class SnappShopScraperService extends ScraperService
 
     public function createPages(Scrap $scrap): void
     {
-        $totalPages = $this->processPages($scrap, 1, 1);
-        if ($totalPages > 1) {
-            $totalPages = $this->processPages($scrap, 2, $totalPages);
+        if (! $scrap->started_at) {
+            return;
         }
 
-        if (
-            $totalPages &&
-            (Page::notPending($scrap->id)->count() == $totalPages)
-        ) {
-            $this->startScrap($scrap);
+        $totalPages = $this->processPages($scrap, 1, 1);
+        if (! $totalPages) {
+            return;
         }
+
+        for ($pageNumber = 1; $pageNumber <= $totalPages; $pageNumber++) {
+            $this->updateOrCreatePage($scrap->id, $pageNumber);
+        }
+        $this->startScrap($scrap);
     }
 
     protected function processPages(Scrap $scrap, int $start, int $end)
