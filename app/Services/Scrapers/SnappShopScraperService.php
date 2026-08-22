@@ -3,6 +3,7 @@
 namespace App\Services\Scrapers;
 
 use App\Enums\CaratEnum;
+use App\Enums\SourceEnum;
 use App\Models\Page;
 use App\Models\Product;
 use App\Models\Scrap;
@@ -12,6 +13,11 @@ use Illuminate\Support\Facades\Http;
 class SnappShopScraperService extends ScraperService
 {
     protected const API_BASE = 'https://apix.snappshop.ir';
+
+    public function getSourceEnum(): SourceEnum
+    {
+        return SourceEnum::SNAPSHOP;
+    }
 
     protected function callPage(array $pages): array
     {
