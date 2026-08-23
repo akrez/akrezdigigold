@@ -22,14 +22,13 @@
             <div class="row">
                 <div class="col-12 col-xl-8 mx-auto">
 
-                    <ul class="nav nav-pills nav-fill gap-1" role="tablist">
+                    <ul class="nav nav-pills nav-fill gap-0" role="tablist">
                         @foreach ($summaryItems as $caratKey => $items)
                             <li class="nav-item">
-                                <a class="nav-link {{ $caratKey === $firstCaratKey ? 'active' : '' }}" data-bs-toggle="tab" href="#tab-{{ $caratKey }}" role="tab" aria-controls="tab-{{ $caratKey }}" aria-selected="{{ $caratKey === $firstCaratKey ? 'true' : 'false' }}">عیار {{ match ($caratKey) {
+                                <a class="nav-link {{ $caratKey === $firstCaratKey ? 'active' : '' }}" data-bs-toggle="tab" href="#tab-{{ $caratKey }}" role="tab" aria-controls="tab-{{ $caratKey }}" aria-selected="{{ $caratKey === $firstCaratKey ? 'true' : 'false' }}">{{ match ($caratKey) {
                                         'CARAT_9999' => '999.9',
                                         default => str_replace('CARAT_', '', $caratKey),
-                                    } }}
-                                </a>
+                                    } }} عیار</a>
                             </li>
                         @endforeach
                     </ul>
@@ -37,7 +36,7 @@
                     <div class="tab-content border-x px-0 pt-3">
                         @foreach ($summaryItems as $caratKey => $items)
                             <div class="tab-pane fade table-responsive {{ $caratKey === $firstCaratKey ? 'show active' : '' }}" id="tab-{{ $caratKey }}" role="tabpanel">
-                                <table class="table table-bordered table-sm align-middle">
+                                <table class="table table-bordered table-sm align-middle small">
                                     <thead class="bg-200 text-900 table-dark">
                                         <tr>
                                             <th></th>
@@ -57,13 +56,13 @@
                                                 <td colspan="3">
                                                     <a class="text-decoration-none" target="_blank" href="{{ $item['url'] }}">{{ $item['ttl'] }}</a>
                                                 </td>
-                                                <td>{{ $item['src'] }}</td>
+                                                <td>{{ $item['sel'] }}</td>
                                             </tr>
                                             <tr class="{{ $rowTheme }}">
                                                 <td class="font-monospace">{{ $item['ppgf'] }}</td>
                                                 <td class="font-monospace">{{ $item['prcf'] }}</td>
                                                 <td class="font-monospace">{{ $item['siz'] }}</td>
-                                                <td>{{ $item['sel'] }}</td>
+                                                <td>{{ $item['src'] }}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
