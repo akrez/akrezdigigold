@@ -33,11 +33,11 @@ class DigiKalaScraperService extends ScraperService
 
     public function createPages(Scrap $scrap): void
     {
-        if (! $scrap->started_at) {
+        if ($scrap->started_at) {
             return;
         }
 
-        $totalPages = $this->processPages($scrap, 1, 1);
+        $totalPages = $this->processPages($scrap, [1]);
         if (! $totalPages) {
             return;
         }
@@ -48,25 +48,22 @@ class DigiKalaScraperService extends ScraperService
         $this->startScrap($scrap);
     }
 
-    protected function processPages(Scrap $scrap, int $start, int $end)
+    protected function processPages(Scrap $scrap, array $pageNumbers)
     {
         $totalPages = 0;
         try {
-            $remainingPages = range($start, $end);
-            foreach (array_chunk($remainingPages, 50) as $chunk) {
-                $responses = $this->callPage($chunk);
-                foreach ($responses as $pageNumber => $response) {
-                    if ($response instanceof ConnectionException) {
-                        $this->logError($response);
-                    } elseif ($response->successful()) {
+            $responses = $this->callPage($pageNumbers);
+            foreach ($responses as $pageNumber => $response) {
+                if ($response instanceof ConnectionException) {
+                    $this->logError($response);
+                } elseif ($response->successful()) {
                         $totalPages = intval($totalPages ?: $response->json('data.pager.total_pages'));
-                        $page = $this->updateOrCreatePage($scrap->id, $pageNumber);
-                        if ($page) {
-                            $this->completePage(
-                                $page,
-                                $this->createProductByResponse($scrap, $page, $response)
-                            );
-                        }
+                    $page = $this->updateOrCreatePage($scrap->id, $pageNumber);
+                    if ($page) {
+                        $this->completePage(
+                            $page,
+                            $this->createProductByResponse($scrap, $page, $response)
+                        );
                     }
                 }
             }
@@ -83,15 +80,13 @@ class DigiKalaScraperService extends ScraperService
             $allPages = Page::pending($scrap->id)
                 ->get()
                 ->pluck(null, 'number');
+
+            if ($allPages->isEmpty()) {
+                return;
+            }
+
             foreach (array_chunk($allPages->pluck('number')->toArray(), 10) as $pageNumbers) {
-                $responses = $this->callPage($pageNumbers);
-                foreach ($responses as $pageNumber => $response) {
-                    $page = $allPages[$pageNumber];
-                    $this->completePage(
-                        $page,
-                        $this->createProductByResponse($scrap, $page, $response)
-                    );
-                }
+                $this->processPages($scrap, $pageNumbers);
             }
         } catch (\Exception $e) {
             $this->logError($e);

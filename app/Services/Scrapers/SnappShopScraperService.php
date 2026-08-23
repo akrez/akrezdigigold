@@ -37,7 +37,7 @@ class SnappShopScraperService extends ScraperService
 
     public function createPages(Scrap $scrap): void
     {
-        if (! $scrap->started_at) {
+        if ($scrap->started_at) {
             return;
         }
 
