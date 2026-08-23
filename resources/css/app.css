@@ -1,9 +1,28 @@
-@import 'tailwindcss';
+@import "bootstrap/dist/css/bootstrap.rtl.min.css";
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+* {
+    font-family: "Vazirmatn Variable";
+}
+
+.max-50px {
+    max-height: 38px;
+}
+
+.border-bottom-width-half {
+    border-bottom-width: 0.15rem !important;
+}
+
+.nav-link {
+    border-color: rgb(222, 226, 230) !important;
+}
+
+.nav-link.active {
+    color: #fff !important;
+    background-color: RGBA(
+        var(--bs-primary-rgb),
+        var(--bs-bg-opacity, 1)
+    ) !important;
 }
