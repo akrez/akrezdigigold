@@ -113,16 +113,11 @@ class SnappShopScraperService extends ScraperService
             foreach ($items as $item) {
                 $productId = str_replace('snp-', '', basename($item['href'] ?? ''));
                 if ($productId) {
-                    $product = $this->updateOrCreateProduct(
-                        $scrap->id,
-                        $page->id,
-                        $productId,
-                        [
-                            'title' => $item['title'] ?? '',
-                            'image_url' => $item['image']['src'] ?? null,
-                            'product_url' => 'https://snappshop.ir/product/snp-'.$productId,
-                        ]
-                    );
+                    $product = $this->updateOrCreateProduct($scrap->id, $page->id, $productId, [
+                        'title' => $item['title'] ?? '',
+                        'image_url' => $item['image']['src'] ?? null,
+                        'product_url' => 'https://snappshop.ir/product/snp-'.$productId,
+                    ]);
                     if ($product) {
                         $saved = true;
                     }
@@ -150,7 +145,7 @@ class SnappShopScraperService extends ScraperService
                         if ($product) {
                             $this->completeProduct(
                                 $product,
-                                $this->processProduct($scrap->id, $product, $response)
+                                $this->createVariantByResponse($scrap->id, $product, $response)
                             );
                         }
                     }
@@ -172,7 +167,7 @@ class SnappShopScraperService extends ScraperService
         )->toArray());
     }
 
-    protected function processProduct(int $scrapId, Product $product, $response): int
+    protected function createVariantByResponse(int $scrapId, Product $product, $response): int
     {
         try {
             if ($response instanceof ConnectionException) {

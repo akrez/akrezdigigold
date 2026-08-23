@@ -57,7 +57,7 @@ class DigiKalaScraperService extends ScraperService
                 if ($response instanceof ConnectionException) {
                     $this->logError($response);
                 } elseif ($response->successful()) {
-                        $totalPages = intval($totalPages ?: $response->json('data.pager.total_pages'));
+                    $totalPages = intval($totalPages ?: $response->json('data.pager.total_pages'));
                     $page = $this->updateOrCreatePage($scrap->id, $pageNumber);
                     if ($page) {
                         $this->completePage(
@@ -138,7 +138,7 @@ class DigiKalaScraperService extends ScraperService
                         if ($product) {
                             $this->completeProduct(
                                 $product,
-                                $this->processProductVariants($scrap->id, $product, $response)
+                                $this->createVariantByResponseVariants($scrap->id, $product, $response)
                             );
                         }
                     }
@@ -157,7 +157,7 @@ class DigiKalaScraperService extends ScraperService
         )->toArray());
     }
 
-    protected function processProductVariants(int $scrapId, Product $product, $response): int
+    protected function createVariantByResponseVariants(int $scrapId, Product $product, $response): int
     {
         try {
             if ($response instanceof ConnectionException) {
