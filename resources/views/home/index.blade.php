@@ -57,13 +57,13 @@
                                                 <td colspan="3">
                                                     <a class="text-decoration-none" target="_blank" href="{{ $item['url'] }}">{{ $item['ttl'] }}</a>
                                                 </td>
-                                                <td>{{ $item['sel'] }}</td>
+                                                <td>{{ $item['src'] }}</td>
                                             </tr>
                                             <tr class="{{ $rowTheme }}">
                                                 <td class="font-monospace">{{ $item['ppgf'] }}</td>
                                                 <td class="font-monospace">{{ $item['prcf'] }}</td>
                                                 <td class="font-monospace">{{ $item['siz'] }}</td>
-                                                <td>{{ $item['src'] }}</td>
+                                                <td>{{ $item['sel'] }}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
