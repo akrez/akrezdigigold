@@ -10,19 +10,19 @@ use Illuminate\Support\Facades\Cache;
 
 class ScrapService
 {
-    protected function getCacheKey(): string
+    protected function getSummaryCacheKey(): string
     {
         return __CLASS__.'::'.__FUNCTION__;
     }
 
     public function clearSummaryCache(): bool
     {
-        return Cache::forget($this->getCacheKey());
+        return Cache::forget($this->getSummaryCacheKey());
     }
 
     public function buildSummaryCache(int $ttl = 3600): array
     {
-        return Cache::remember($this->getCacheKey(), $ttl, function () use ($ttl) {
+        return Cache::remember($this->getSummaryCacheKey(), $ttl, function () use ($ttl) {
             $result = [
                 'date' => now()->format('Y-m-d H:i:s'),
                 'scraps' => [],
