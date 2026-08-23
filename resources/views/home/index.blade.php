@@ -12,7 +12,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-12 col-xl-8 mx-auto">
-                <div class="alert alert-info my-3 text-center" dir="ltr" role="alert">
+                <div class="alert alert-info my-3 text-center lh-1" dir="ltr" role="alert">
                     {{ data_get($summary, 'date') }}
                 </div>
             </div>
@@ -22,7 +22,7 @@
             <div class="row">
                 <div class="col-12 col-xl-8 mx-auto">
 
-                    <ul class="nav nav-pills nav-fill gap-3" role="tablist">
+                    <ul class="nav nav-pills nav-fill gap-1" role="tablist">
                         @foreach ($summaryItems as $caratKey => $items)
                             <li class="nav-item">
                                 <a class="nav-link {{ $caratKey === $firstCaratKey ? 'active' : '' }}" data-bs-toggle="tab" href="#tab-{{ $caratKey }}" role="tab" aria-controls="tab-{{ $caratKey }}" aria-selected="{{ $caratKey === $firstCaratKey ? 'true' : 'false' }}">عیار {{ match ($caratKey) {
