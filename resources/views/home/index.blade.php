@@ -67,9 +67,7 @@
                                                     <img src="{{ $item['img'] }}" class="max-50px" alt="">
                                                 </td>
                                                 <td colspan="3">
-                                                    <a class="text-decoration-none" target="_blank" href="{{ $item['url'] }}">
-                                                        {{ $item['ttl'] }}
-                                                    </a>
+                                                    <a class="text-decoration-none" target="_blank" href="{{ $item['url'] }}">{{ $item['ttl'] }}</a>
                                                 </td>
                                                 <td>{{ $item['sel'] }}</td>
                                             </tr>
