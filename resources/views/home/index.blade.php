@@ -56,7 +56,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach (array_slice($items, 0, 10) as $item)
+                                            @foreach (array_slice($items, 0, 5) as $item)
                                                 @php($rowTheme = $loop->index % 2 ? ' table-secondary ' : '')
                                                 <tr class="{{ $rowTheme }}">
                                                     <td rowspan="2" class="text-center p-0">
