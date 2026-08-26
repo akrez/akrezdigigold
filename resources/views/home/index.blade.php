@@ -38,7 +38,7 @@
                             <div class="tab-pane fade table-responsive {{ $loop->first ? 'show active' : '' }}"
                                 id="tab-{{ $carat['name'] }}" role="tabpanel">
                                 <table class="table table-bordered table-sm align-middle small">
-                                    <thead class="bg-200 text-900 table-dark">
+                                    <thead class="bg-200 text-900 table-primary">
                                         <tr>
                                             <th></th>
                                             <th>قیمت هر گرم</th>
@@ -48,7 +48,7 @@
                                     </thead>
                                     @foreach (data_get($summaryItems, $carat['name'], []) as $sourceName => $items)
                                         @continue(count($items) === 0)
-                                        <thead class="bg-200 text-900 table-dark text-center">
+                                        <thead class="bg-200 text-900 table-info text-center">
                                             <tr>
                                                 <th colspan="4">
                                                     {{ data_get($summaryScraps, $sourceName . '.source.trans', $sourceName) }}
