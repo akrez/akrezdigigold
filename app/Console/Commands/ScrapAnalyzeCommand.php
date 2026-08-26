@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Enums\SourceEnum;
-use App\Services\Scrapers\DigiKalaScraperService as ScrapersDigiKalaScraperService;
+use App\Services\Scrapers\DigiKalaScraperService;
 use App\Services\Scrapers\SnappShopScraperService;
 use App\Services\ScrapService;
 use Illuminate\Console\Command;
@@ -21,20 +21,27 @@ class ScrapAnalyzeCommand extends Command
 
         $scrapKey = $this->option('key') ?? now()->format('YmdH0000');
 
-        $scraperService = match ($source) {
-            SourceEnum::DIGIKALA->name => ScrapersDigiKalaScraperService::class,
+        $scraperServiceClassName = match ($source) {
+            SourceEnum::DIGIKALA->name => DigiKalaScraperService::class,
             SourceEnum::SNAPSHOP->name => SnappShopScraperService::class,
             default => null,
         };
-        if (! $scraperService) {
+        if (! $scraperServiceClassName) {
             $this->error('Invalid Source');
 
             return Command::FAILURE;
         }
 
-        $status = app($scraperService)->analyze($scrapKey);
+        $scraperService = app($scraperServiceClassName);
+
+        $scrap = $scraperService->firstOrCreateScrap($scrapKey);
+        if (! $scrap) {
+            return Command::FAILURE;
+        }
+
+        $status = $scraperService->analyze($scrap);
         if ($status > 200) {
-            app(ScrapService::class)->clearSummaryCache();
+            app(ScrapService::class)->forgetSummaryCache();
         }
         $this->info('End');
 
