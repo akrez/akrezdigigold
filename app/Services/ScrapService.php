@@ -25,46 +25,48 @@ class ScrapService
         return Cache::remember($this->getSummaryCacheKey(), $ttl, function () use ($ttl) {
             $result = [
                 'date' => now()->format('Y-m-d H:i:s'),
-                'scraps' => [],
-                'items' => array_fill_keys(CaratEnum::names(), []),
-                'total_count' => 0,
+                'carats' => CaratEnum::collection(),
+                'scraps' => array_fill_keys(SourceEnum::names(), null),
+                'items' => array_fill_keys(
+                    CaratEnum::names(),
+                    array_fill_keys(SourceEnum::names(), [])
+                ),
             ];
 
-            foreach (SourceEnum::names() as $sourceName) {
+            $scrapIds = [];
+            foreach (SourceEnum::cases() as $sourceEnum) {
                 $scrap = Scrap::query()
-                    ->where('source', $sourceName)
+                    ->where('source', $sourceEnum->name)
                     ->whereTime('created_at', '>=', now()->subSeconds($ttl))
                     ->whereNotNull('completed_at')
+                    ->orderBy('completed_at', 'DESC')
                     ->first();
                 if ($scrap) {
-                    $result['scraps'][$scrap->id] = [
-                        'source' => $scrap->source,
+                    $scrapIds[] = $scrap->id;
+                    $result['scraps'][$sourceEnum->name] = [
+                        'source' => $sourceEnum->resource(),
+                        'completed_at' => $scrap->completed_at,
                     ];
                 }
             }
 
-            if (! $result['scraps']) {
+            if (! $scrapIds) {
                 return $result;
             }
 
-            $scrapIds = array_keys($result['scraps']);
-            $result['scraps'] = array_values($result['scraps']);
-
             $variants = Variant::query()
                 ->whereIn('scrap_id', $scrapIds)
-                ->with(['product'])
+                ->with(['scrap', 'product'])
                 ->whereNotNull('carat')
                 ->where('size', '>', 0)
                 ->where('price_per_gram', '>', 0)
                 ->orderBy('price_per_gram')
                 ->get();
 
-            $result['total_count'] = $variants->count();
-
             $variants->each(function ($variant) use (&$result) {
                 $price = intval($variant->price);
                 $pricePerGram = intval($price / $variant->size);
-                $result['items'][$variant->carat][] = [
+                $result['items'][$variant->carat][$variant->scrap->source][] = [
                     'ttl' => $variant->product->title,
                     'siz' => $variant->size,
                     'url' => $variant->product->product_url,

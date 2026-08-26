@@ -1,0 +1,7 @@
+{
+    "enums.SourceEnum.DIGIKALA": "Digikala",
+    "enums.SourceEnum.SNAPSHOP": "Snapshop",
+    "enums.CaratEnum.CARAT_18": "18 carat",
+    "enums.CaratEnum.CARAT_24": "24 carat",
+    "enums.CaratEnum.CARAT_9999": "999.9 carat"
+}

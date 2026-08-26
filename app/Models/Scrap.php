@@ -25,11 +25,6 @@ class Scrap extends Model
 {
     protected $table = 'scraps';
 
-    protected $casts = [
-        'started_at' => 'datetime',
-        'completed_at' => 'datetime',
-    ];
-
     protected $fillable = [
         'source',
         'scrap_key',
