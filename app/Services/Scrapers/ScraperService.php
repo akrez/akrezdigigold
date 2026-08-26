@@ -20,12 +20,8 @@ abstract class ScraperService
 
     const ERROR_CATCH = 50;
 
-    public function analyze(string $scrapKey): int
+    public function analyze(Scrap $scrap): int
     {
-        $scrap = $this->firstOrCreateScrap($scrapKey, $this->getSourceEnum());
-        if (! $scrap) {
-            return 404;
-        }
         if ($scrap->completed_at) {
             return 200;
         }
@@ -72,11 +68,11 @@ abstract class ScraperService
         return $scrap->update(['started_at' => now()]);
     }
 
-    public function firstOrCreateScrap(string $scrapKey, SourceEnum $sourceEnum): ?Scrap
+    public function firstOrCreateScrap(string $scrapKey): ?Scrap
     {
         try {
             return Scrap::firstOrCreate([
-                'source' => $sourceEnum->name,
+                'source' => $this->getSourceEnum()->name,
                 'scrap_key' => $scrapKey,
             ]);
         } catch (\Exception $e) {
