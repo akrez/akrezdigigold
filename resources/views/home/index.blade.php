@@ -3,8 +3,9 @@
 @section('title', 'Akrez Gold')
 
 @php
-    $summaryItems = array_filter(data_get($summary, 'items', []));
-    $firstCaratKey = array_key_first($summaryItems);
+    $summaryCarats = data_get($summary, 'carats', []);
+    $summaryScraps = data_get($summary, 'scraps', []);
+    $summaryItems = data_get($summary, 'items', []);
 @endphp
 
 @section('content')
@@ -18,54 +19,60 @@
             </div>
         </div>
 
-        @if (count($summaryItems))
+        @if (count($summaryCarats))
             <div class="row">
                 <div class="col-12 col-xl-8 mx-auto">
 
                     <ul class="nav nav-pills nav-fill gap-0" role="tablist">
-                        @foreach ($summaryItems as $caratKey => $items)
+                        @foreach ($summaryCarats as $carat)
                             <li class="nav-item">
-                                <a class="nav-link {{ $caratKey === $firstCaratKey ? 'active' : '' }}" data-bs-toggle="tab" href="#tab-{{ $caratKey }}" role="tab" aria-controls="tab-{{ $caratKey }}" aria-selected="{{ $caratKey === $firstCaratKey ? 'true' : 'false' }}">{{ match ($caratKey) {
-                                        'CARAT_9999' => '999.9',
-                                        default => str_replace('CARAT_', '', $caratKey),
-                                    } }} عیار</a>
+                                <a class="nav-link {{ $loop->first ? 'active' : '' }}" data-bs-toggle="tab"
+                                    href="#tab-{{ $carat['name'] }}" role="tab" aria-controls="tab-{{ $carat['name'] }}"
+                                    aria-selected="{{ $loop->first ? 'true' : 'false' }}">{{ $carat['trans'] }}</a>
                             </li>
                         @endforeach
                     </ul>
 
                     <div class="tab-content border-x px-0 pt-3">
-                        @foreach ($summaryItems as $caratKey => $items)
-                            <div class="tab-pane fade table-responsive {{ $caratKey === $firstCaratKey ? 'show active' : '' }}" id="tab-{{ $caratKey }}" role="tabpanel">
+                        @foreach ($summaryCarats as $carat)
+                            <div class="tab-pane fade table-responsive {{ $loop->first ? 'show active' : '' }}"
+                                id="tab-{{ $carat['name'] }}" role="tabpanel">
                                 <table class="table table-bordered table-sm align-middle small">
                                     <thead class="bg-200 text-900 table-dark">
                                         <tr>
                                             <th></th>
                                             <th>قیمت هر گرم</th>
-                                            <th>قیمت</th>
                                             <th>وزن</th>
-                                            <th>فروشنده</th>
+                                            <th>قیمت</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        @foreach (array_slice($items, 0, 20) as $item)
-                                            @php($rowTheme = $loop->index % 2 ? ' table-secondary ' : '')
-                                            <tr class="{{ $rowTheme }}">
-                                                <td rowspan="2" class="text-center p-0">
-                                                    <img src="{{ $item['img'] }}" class="max-50px" alt="">
+                                    @foreach (data_get($summaryItems, $carat['name'], []) as $sourceName => $items)
+                                        @continue(count($items) === 0)
+                                        <tbody>
+                                            <tr class="table-secondary">
+                                                <td colspan="4" class="text-center fw-bold">
+                                                    {{ data_get($summaryScraps, $sourceName . '.source.trans', $sourceName) }}
                                                 </td>
-                                                <td colspan="3">
-                                                    <a class="text-decoration-none" target="_blank" href="{{ $item['url'] }}">{{ $item['ttl'] }}</a>
-                                                </td>
-                                                <td>{{ $item['sel'] }}</td>
                                             </tr>
-                                            <tr class="{{ $rowTheme }}">
-                                                <td class="font-monospace">{{ $item['ppgf'] }}</td>
-                                                <td class="font-monospace">{{ $item['prcf'] }}</td>
-                                                <td class="font-monospace">{{ $item['siz'] }}</td>
-                                                <td>{{ $item['src'] }}</td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
+                                            @foreach (array_slice($items, 0, 10) as $item)
+                                                @php($rowTheme = $loop->index % 2 ? ' table-secondary ' : '')
+                                                <tr class="{{ $rowTheme }}">
+                                                    <td rowspan="2" class="text-center p-0">
+                                                        <img src="{{ $item['img'] }}" class="max-50px" alt="">
+                                                    </td>
+                                                    <td colspan="2">
+                                                        <a class="text-decoration-none" target="_blank" href="{{ $item['url'] }}">{{ $item['ttl'] }}</a>
+                                                    </td>
+                                                    <td>{{ $item['sel'] }}</td>
+                                                </tr>
+                                                <tr class="{{ $rowTheme }}">
+                                                    <td class="font-monospace">{{ $item['ppgf'] }}</td>
+                                                    <td class="font-monospace">{{ $item['siz'] }}</td>
+                                                    <td class="font-monospace">{{ $item['prcf'] }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    @endforeach
                                 </table>
                             </div>
                         @endforeach
