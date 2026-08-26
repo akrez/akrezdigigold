@@ -20,7 +20,7 @@ class ScrapService
         return Cache::forget($this->getSummaryCacheKey());
     }
 
-    public function buildSummaryCache(int $ttl = 3600): array
+    public function buildSummaryCache(int $ttl = 7200): array
     {
         return Cache::remember($this->getSummaryCacheKey(), $ttl, function () use ($ttl) {
             $result = [
@@ -30,7 +30,7 @@ class ScrapService
             foreach (SourceEnum::cases() as $sourceEnum) {
                 $scrap = $this->buildScrapSummary($sourceEnum, $ttl);
                 if ($scrap) {
-                    $result['scraps'] = $scrap;
+                    $result['scraps'][] = $scrap;
                 }
             }
 
@@ -53,11 +53,11 @@ class ScrapService
         $result = [
             'source' => $sourceEnum->resource(),
             'completed_at' => $scrap->completed_at,
-            'variants' => array_fill_keys(SourceEnum::names(), null),
+            'variants' => array_fill_keys(CaratEnum::names(), null),
         ];
 
         $variants = Variant::query()
-            ->whereIn('scrap_id', $scrap->id)
+            ->where('scrap_id', $scrap->id)
             ->with(['product'])
             ->whereNotNull('carat')
             ->where('size', '>', 0)
@@ -69,6 +69,8 @@ class ScrapService
             $price = intval($variant->price);
             $pricePerGram = intval($price / $variant->size);
             $result['variants'][$variant->carat][] = [
+                'id' => $variant->id,
+                //
                 'ttl' => $variant->product->title,
                 'siz' => $variant->size,
                 'url' => $variant->product->product_url,

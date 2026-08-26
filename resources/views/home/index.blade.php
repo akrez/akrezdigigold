@@ -2,87 +2,110 @@
 
 @section('title', 'Akrez Gold')
 
-@php
-    $summaryCarats = data_get($summary, 'carats', []);
-    $summaryScraps = data_get($summary, 'scraps', []);
-    $summaryItems = data_get($summary, 'items', []);
-@endphp
-
 @section('content')
 
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-12 col-xl-8 mx-auto">
-                <div class="alert alert-info my-3 text-center lh-1" dir="ltr" role="alert">
-                    {{ data_get($summary, 'date') }}
-                </div>
-            </div>
-        </div>
+        <div x-data="summary()">
+            <template x-if="carats.length">
+                <div class="row">
+                    <div class="col-12 col-xl-8 mx-auto">
 
-        @if (count($summaryCarats))
-            <div class="row">
-                <div class="col-12 col-xl-8 mx-auto">
+                        <ul class="nav nav-pills nav-fill gap-0 pt-2">
+                            <template x-for="carat in carats" :key="carat.name">
+                                <li class="nav-item">
+                                    <button type="button" class="nav-link w-100"
+                                        :class="activeCarat === carat.name ? 'active' : ''"
+                                        @click="activeCarat = carat.name" x-text="carat.trans"></button>
+                                </li>
+                            </template>
+                        </ul>
 
-                    <ul class="nav nav-pills nav-fill gap-0" role="tablist">
-                        @foreach ($summaryCarats as $carat)
-                            <li class="nav-item">
-                                <a class="nav-link {{ $loop->first ? 'active' : '' }}" data-bs-toggle="tab"
-                                    href="#tab-{{ $carat['name'] }}" role="tab" aria-controls="tab-{{ $carat['name'] }}"
-                                    aria-selected="{{ $loop->first ? 'true' : 'false' }}">{{ $carat['trans'] }}</a>
-                            </li>
-                        @endforeach
-                    </ul>
+                        <template x-if="sources.length">
+                            <ul class="nav nav-pills nav-fill gap-0 pt-2">
+                                <template x-for="source in sources" :key="source.name">
+                                    <li class="nav-item">
+                                        <button type="button" class="nav-link w-100"
+                                            :class="activeSource === source.name ? 'active' : ''"
+                                            @click="activeSource = source.name" x-text="source.trans"></button>
+                                    </li>
+                                </template>
+                            </ul>
+                        </template>
 
-                    <div class="tab-content border-x px-0 pt-3">
-                        @foreach ($summaryCarats as $carat)
-                            <div class="tab-pane fade table-responsive {{ $loop->first ? 'show active' : '' }}"
-                                id="tab-{{ $carat['name'] }}" role="tabpanel">
-                                <table class="table table-bordered table-sm align-middle">
-                                    @foreach (data_get($summaryItems, $carat['name'], []) as $sourceName => $items)
-                                        @continue(count($items) === 0)
-                                        <thead class="bg-200 text-900">
-                                            <tr class="table-dark text-center">
-                                                <th class="p-2" colspan="4">
-                                                    {{ data_get($summaryScraps, $sourceName . '.source.trans', $sourceName) }}
-                                                </th>
-                                            </tr>
-                                            <tr class="table-dark">
-                                                <th></th>
-                                                <th>قیمت هر گرم</th>
-                                                <th>وزن</th>
-                                                <th>قیمت</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (array_slice($items, 0, 5) as $item)
-                                                @php($rowTheme = $loop->index % 2 ? ' table-secondary ' : '')
-                                                <tr class="{{ $rowTheme }}">
+
+
+
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm align-middle mt-2">
+                                <thead class="bg-200 text-900">
+                                    <tr class="table-dark">
+                                        <th></th>
+                                        <th>قیمت هر گرم</th>
+                                        <th>وزن</th>
+                                        <th>قیمت</th>
+                                    </tr>
+                                </thead>
+                                <template x-for="scrap in scraps" :key="scrap.source.name">
+                                    <template x-for="(variants, variantCarat) in scrap.variants" :key="variantCarat">
+                                        <template x-for="(variant, index) in variants.slice(0, 10)" :key="variant.id">
+                                            <tbody :class="{'table-secondary': index % 2 == 1}"
+                                                x-show="activeSource === scrap.source.name && activeCarat === variantCarat">
+                                                <tr>
                                                     <td rowspan="2" class="text-center p-0">
-                                                        <img src="{{ $item['img'] }}" class="max-50px" alt="">
+                                                        <img :src="variant.img" class="max-50px" alt="">
                                                     </td>
                                                     <td colspan="2">
                                                         <a class="text-decoration-none" target="_blank"
-                                                            href="{{ $item['url'] }}">{{ $item['ttl'] }}</a>
+                                                            :href="variant.url" x-text="variant.ttl"></a>
                                                     </td>
-                                                    <td>{{ $item['sel'] }}</td>
+                                                    <td x-text="variant.sel"></td>
                                                 </tr>
-                                                <tr class="{{ $rowTheme }}">
-                                                    <td class="font-monospace">{{ $item['ppgf'] }}</td>
-                                                    <td class="font-monospace">{{ $item['siz'] }}</td>
-                                                    <td class="font-monospace">{{ $item['prcf'] }}</td>
+                                                <tr>
+                                                    <td class="font-monospace" x-text="variant.ppgf"></td>
+                                                    <td class="font-monospace" x-text="variant.siz"></td>
+                                                    <td class="font-monospace" x-text="variant.prcf"></td>
                                                 </tr>
-                                            @endforeach
-                                        </tbody>
-                                    @endforeach
-                                </table>
-                            </div>
-                        @endforeach
-                    </div>
+                                            </tbody>
+                                        </template>
+                                    </template>
+                                </template>
+                            </table>
+                        </div>
 
+
+
+
+
+
+
+                    </div>
                 </div>
-            </div>
-        @endif
+            </template>
+        </div>
 
     </div>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('summary', (summary) => ({
+                carats: [],
+                scraps: [],
+                sources: [],
+                activeCarat: '',
+                activeSource: '',
+                init() {
+                    data = @json($summary);
+                    this.carats = data.carats || [];
+                    this.scraps = data.scraps || [];
+                    this.scraps.forEach(scrap => {
+                        this.sources.push(scrap.source);
+                    });
+                    this.activeCarat = this.carats[0]?.name || '';
+                    this.activeSource = this.sources[0]?.name || '';
+                },
+            }));
+        });
+    </script>
 
 @endsection
