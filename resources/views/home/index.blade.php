@@ -48,12 +48,14 @@
                                     </thead>
                                     @foreach (data_get($summaryItems, $carat['name'], []) as $sourceName => $items)
                                         @continue(count($items) === 0)
-                                        <tbody>
-                                            <tr class="table-secondary">
-                                                <td colspan="4" class="text-center fw-bold">
+                                        <thead class="bg-200 text-900 table-dark text-center">
+                                            <tr>
+                                                <th colspan="4">
                                                     {{ data_get($summaryScraps, $sourceName . '.source.trans', $sourceName) }}
-                                                </td>
+                                                </th>
                                             </tr>
+                                        </thead>
+                                        <tbody>
                                             @foreach (array_slice($items, 0, 10) as $item)
                                                 @php($rowTheme = $loop->index % 2 ? ' table-secondary ' : '')
                                                 <tr class="{{ $rowTheme }}">
@@ -61,7 +63,8 @@
                                                         <img src="{{ $item['img'] }}" class="max-50px" alt="">
                                                     </td>
                                                     <td colspan="2">
-                                                        <a class="text-decoration-none" target="_blank" href="{{ $item['url'] }}">{{ $item['ttl'] }}</a>
+                                                        <a class="text-decoration-none" target="_blank"
+                                                            href="{{ $item['url'] }}">{{ $item['ttl'] }}</a>
                                                     </td>
                                                     <td>{{ $item['sel'] }}</td>
                                                 </tr>
