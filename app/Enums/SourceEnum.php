@@ -8,4 +8,9 @@ enum SourceEnum
 
     case DIGIKALA;
     case SNAPSHOP;
+    case WALLGOLD;
+    case TECHNOGOLD;
+    case TALASEA;
+    case MELLIGOLD;
+    case MILLIGOLD;
 }
