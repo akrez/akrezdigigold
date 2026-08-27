@@ -8,7 +8,7 @@ class WallgoldPriceService extends PriceService
 {
     protected function getEndpoint(): string
     {
-        return 'https://wallgold.ir/gold-price/wp-json/wgx/v1/chart/?key=gold18k&period=daily';
+        return 'https://api.wallgold.ir/api/v1/price?side=buy&symbol=GLD_18C_750TMN';
     }
 
     public function getSourceEnum(): SourceEnum
