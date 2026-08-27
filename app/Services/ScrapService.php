@@ -10,25 +10,46 @@ use Illuminate\Support\Facades\Cache;
 
 class ScrapService
 {
-    protected function getSummaryCacheKey(): string
+    const CACHE_TTL = 7200;
+
+    const CACHE_KEY_SECTION_SUMMARY = 'summary';
+
+    const CACHE_KEY_SECTION_SHORT_SUMMARY = 'short_summary';
+
+    protected function getCacheKey(?string $section): string
     {
-        return implode('::', [__CLASS__, __FUNCTION__]);
+        return implode('::', [__CLASS__, __FUNCTION__, $section]);
     }
 
-    public function forgetSummaryCache(): bool
+    public function forgetCache(): void
     {
-        return Cache::forget($this->getSummaryCacheKey());
+        Cache::forget($this->getCacheKey(self::CACHE_KEY_SECTION_SUMMARY));
+        Cache::forget($this->getCacheKey(self::CACHE_KEY_SECTION_SHORT_SUMMARY));
     }
 
-    public function buildSummaryCache(int $ttl = 7200): array
+    public function buildShortSummaryCache(int $length = 10): array
     {
-        return Cache::remember($this->getSummaryCacheKey(), $ttl, function () use ($ttl) {
+        return Cache::remember($this->getCacheKey(self::CACHE_KEY_SECTION_SHORT_SUMMARY), self::CACHE_TTL, function () use ($length) {
+            $summary = $this->buildSummaryCache();
+            foreach ($summary['scraps'] as $scrapKey => $scrap) {
+                foreach ($scrap['variants'] as $carat => $variants) {
+                    $summary['scraps'][$scrapKey]['variants'][$carat] = array_slice($variants, 0, $length);
+                }
+            }
+
+            return $summary;
+        });
+    }
+
+    public function buildSummaryCache(): array
+    {
+        return Cache::remember($this->getCacheKey(self::CACHE_KEY_SECTION_SUMMARY), self::CACHE_TTL, function () {
             $result = [
                 'carats' => CaratEnum::collection(),
                 'scraps' => [],
             ];
             foreach (SourceEnum::cases() as $sourceEnum) {
-                $scrap = $this->buildScrapSummary($sourceEnum, $ttl);
+                $scrap = $this->buildScrapSummary($sourceEnum, self::CACHE_TTL);
                 if ($scrap) {
                     $result['scraps'][] = $scrap;
                 }

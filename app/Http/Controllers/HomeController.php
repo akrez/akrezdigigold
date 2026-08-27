@@ -12,7 +12,7 @@ class HomeController extends Controller
         $scrapService = app(ScrapService::class);
 
         return view('home.index', [
-            'summary' => $scrapService->buildSummaryCache(),
+            'summary' => $scrapService->buildShortSummaryCache(10),
         ]);
     }
 }

@@ -41,7 +41,7 @@ class ScrapAnalyzeCommand extends Command
 
         $status = $scraperService->analyze($scrap);
         if ($status > 200) {
-            app(ScrapService::class)->forgetSummaryCache();
+            app(ScrapService::class)->forgetCache();
         }
         $this->info('End');
 
