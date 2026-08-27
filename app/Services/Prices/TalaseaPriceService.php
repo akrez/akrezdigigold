@@ -8,7 +8,7 @@ class TalaseaPriceService extends PriceService
 {
     protected function getEndpoint(): string
     {
-        return 'https://api.talasea.ir/api/market/getPrice';
+        return 'https://api.talasea.ir/api/market/getGoldPrice';
     }
 
     public function getSourceEnum(): SourceEnum
