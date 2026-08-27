@@ -13,7 +13,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $price_key
  * @property string $carat
  * @property int $price
- * @property Carbon $fetched_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -23,7 +22,6 @@ class Price extends Model
 
     protected $casts = [
         'price' => 'int',
-        'fetched_at' => 'datetime',
     ];
 
     protected $fillable = [
@@ -31,6 +29,5 @@ class Price extends Model
         'price_key',
         'carat',
         'price',
-        'fetched_at',
     ];
 }
