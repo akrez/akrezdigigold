@@ -198,6 +198,9 @@
                                     ticks: {
                                         font: {
                                             family: '"Vazirmatn Variable", sans-serif'
+                                        },
+                                        callback: function(value, index, ticks) {
+                                            return (value / 1000).toFixed(0);
                                         }
                                     }
                                 }
