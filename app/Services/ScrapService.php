@@ -8,7 +8,7 @@ use App\Models\Scrap;
 use App\Models\Variant;
 use Illuminate\Support\Facades\Cache;
 
-class ScrapService
+class ScrapService extends Service
 {
     const CACHE_TTL = 7200;
 

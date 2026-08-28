@@ -8,9 +8,9 @@ use App\Models\Page;
 use App\Models\Product;
 use App\Models\Scrap;
 use App\Models\Variant;
-use Illuminate\Support\Facades\Log;
+use App\Services\Service;
 
-abstract class ScraperService
+abstract class ScraperService extends Service
 {
     const ERROR_CONNECTION = 0;
 
@@ -134,15 +134,5 @@ abstract class ScraperService
         }
 
         return null;
-    }
-
-    protected function logError(\Exception|\Throwable $e): void
-    {
-        Log::error($e->getMessage(), $e->getTrace());
-    }
-
-    protected function sanitizeNumber(string $string): string
-    {
-        return preg_replace('/[^\\d.]+/', '', $string);
     }
 }
