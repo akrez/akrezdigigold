@@ -27,6 +27,6 @@ class TalaseaPriceService extends PriceService
             return null;
         }
 
-        return $intPrice < 1000000 ? $intPrice * 1000 : $intPrice;
+        return $intPrice * 1000;
     }
 }

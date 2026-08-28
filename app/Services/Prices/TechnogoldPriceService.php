@@ -28,6 +28,11 @@ class TechnogoldPriceService extends PriceService
             return null;
         }
 
-        return intval(round(floatval($price)));
+        $intPrice = $this->sanitizeNumber($price);
+        if ($intPrice === null) {
+            return null;
+        }
+
+        return $intPrice;
     }
 }

@@ -27,6 +27,6 @@ class MilligoldPriceService extends PriceService
             return null;
         }
 
-        return $intPrice;
+        return $intPrice * 100;
     }
 }

@@ -25,6 +25,11 @@ class DigikalaPriceService extends PriceService
         $last = end($buckets);
         $price = $last['price'] ?? null;
 
-        return $this->sanitizeNumber($price);
+        $intPrice = $this->sanitizeNumber($price);
+        if ($intPrice === null) {
+            return null;
+        }
+
+        return $intPrice * 100;
     }
 }
