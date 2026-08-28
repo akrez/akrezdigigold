@@ -6,6 +6,11 @@
 
     <div class="container-fluid">
         <div x-data="summary()">
+            <div class="row">
+                <div class="col-12 col-xl-8 mx-auto pt-2">
+                    <canvas id="chart-prices-CARAT_18" height="96"></canvas>
+                </div>
+            </div>
             <template x-if="carats.length">
                 <div class="row">
                     <div class="col-12 col-xl-8 mx-auto">
@@ -27,10 +32,6 @@
                                 </template>
                             </ul>
                         </template>
-
-
-
-
 
                         <div class="table-responsive">
                             <table class="table table-bordered table-sm align-middle mt-2">
@@ -67,12 +68,6 @@
                             </table>
                         </div>
 
-
-
-
-
-
-
                     </div>
                 </div>
             </template>
@@ -82,22 +77,155 @@
 
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('summary', (summary) => ({
+            Alpine.data('summary', () => ({
                 carats: [],
                 scraps: [],
                 sources: [],
                 activeCarat: '',
                 activeSource: '',
+                chartData: [],
                 init() {
-                    data = @json($summary);
-                    this.carats = data.carats || [];
-                    this.scraps = data.scraps || [];
+                    const summary = @json($summary);
+                    const chart = @json($chart);
+
+                    this.carats = summary.carats || [];
+                    this.scraps = summary.scraps || [];
                     this.scraps.forEach(scrap => {
                         this.sources.push(scrap.source);
                     });
                     this.activeCarat = this.carats[0]?.name || '';
                     this.activeSource = this.sources[0]?.name || '';
+                    this.initChart('CARAT_18', chart.prices.CARAT_18);
+                    this.$nextTick(() => {
+                        this.drawChart('CARAT_18', 'chart-prices-CARAT_18');
+                    });
                 },
+                initChart(chartKey, chartData) {
+                    if (!chartData) return;
+                    const brands = Object.keys(chartData).filter(brand => chartData[brand].length > 0);
+                    const allTimes = new Set();
+                    brands.forEach(brand => {
+                        chartData[brand].forEach(item => {
+                            const date = new Date(item.created_at);
+                            allTimes.add(
+                                date.getHours().toString().padStart(2, '0') + ':' +
+                                date.getMinutes().toString().padStart(2, '0')
+                            );
+                        });
+                    });
+                    const labels = Array.from(allTimes).sort();
+                    const datasets = brands.map((brand, index) => {
+                        const priceMap = {};
+                        chartData[brand].forEach(item => {
+                            const date = new Date(item.created_at);
+                            priceMap[
+                                date.getHours().toString().padStart(2, '0') + ':' +
+                                date.getMinutes().toString().padStart(2, '0')
+                            ] = item.price;
+                        });
+                        const prices = labels.map(time => priceMap[time] || null);
+                        const color = `hsl(${index * 50}, 70%, 50%)`;
+                        return {
+                            label: brand,
+                            data: prices,
+                            borderColor: color,
+                            backgroundColor: color + '33',
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            tension: 0.1,
+                            fill: false,
+                            spanGaps: true
+                        };
+                    });
+                    this.chartData[chartKey] = {
+                        labels: labels,
+                        datasets: datasets
+                    };
+                },
+                drawChart(chartKey, chartDomId) {
+                    data = this.chartData[chartKey];
+
+                    const canvas = document.getElementById(chartDomId);
+                    if (!canvas) {
+                        console.error('Canvas element not found');
+                        return;
+                    }
+
+                    const ctx = canvas.getContext('2d');
+                    if (!data || !data.datasets.length) {
+                        console.error('No chart data available');
+                        return;
+                    }
+
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: data,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'bottom',
+                                    labels: {
+                                        font: {
+                                            family: '"Vazirmatn Variable", sans-serif'
+                                        },
+                                        usePointStyle: true,
+                                        pointStyle: 'circle',
+                                        padding: 15,
+                                        generateLabels: function(chart) {
+                                            const data = chart.data;
+                                            return data.datasets.map((dataset, i) => ({
+                                                text: dataset.label,
+                                                fillStyle: dataset.borderColor +
+                                                    '80',
+                                                strokeStyle: dataset
+                                                    .borderColor,
+                                                lineWidth: 2,
+                                                hidden: !chart.isDatasetVisible(
+                                                    i),
+                                                index: i,
+                                                pointStyle: 'circle'
+                                            }));
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    grid: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        maxRotation: 0,
+                                        minRotation: 0,
+                                        autoSkip: false,
+                                        font: {
+                                            family: '"Vazirmatn Variable", sans-serif'
+                                        }
+                                    }
+                                },
+                                y: {
+                                    beginAtZero: false,
+                                    grid: {
+                                        color: 'rgba(0,0,0,0.05)'
+                                    },
+                                    ticks: {
+                                        font: {
+                                            family: '"Vazirmatn Variable", sans-serif'
+                                        }
+                                    }
+                                }
+                            },
+                            interaction: {
+                                mode: 'index',
+                                intersect: false
+                            }
+                        }
+                    });
+                }
             }));
         });
     </script>

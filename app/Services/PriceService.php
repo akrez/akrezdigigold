@@ -8,6 +8,7 @@ use App\Models\Price;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Pool;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 class PriceService extends Service
@@ -17,6 +18,12 @@ class PriceService extends Service
     const RETRY_SLEEP_MS = 500;
 
     const TIMEOUT_SECONDS = 10;
+
+    const CACHE_TTL = 59;
+
+    const CACHE_SUB_SECONDS = 216000;
+
+    const CACHE_KEY_SECTION_CHART = 'chart';
 
     public function fetch(array $serviceClassNames, ?string $priceKey): ?Price
     {
@@ -59,6 +66,31 @@ class PriceService extends Service
 
             return null;
         }
+    }
+
+    protected function getCacheKey(?string $section): string
+    {
+        return implode('::', [__CLASS__, __FUNCTION__, $section]);
+    }
+
+    public function buildChartCache(): array
+    {
+        return Cache::remember($this->getCacheKey(self::CACHE_KEY_SECTION_CHART), self::CACHE_TTL, function () {
+            $result = [
+                'prices' => array_fill_keys(CaratEnum::names(), array_fill_keys(SourceEnum::names(), [])),
+            ];
+            $prices = Price::query()
+                ->whereTime('created_at', '>=', now()->subSeconds(self::CACHE_SUB_SECONDS))
+                ->orderBy('created_at', 'ASC')
+                ->get();
+            foreach ($prices as $price) {
+                $result['prices'][$price->carat][$price->source][] = [
+                    'price'=> $price->price,
+                    'created_at'=> $price->created_at->format('Y-m-d H:i:s'),
+                ];
+            }
+            return $result;
+        });
     }
 
     protected function store(SourceEnum $source, CaratEnum $carat, int $price, ?string $priceKey): ?Price
