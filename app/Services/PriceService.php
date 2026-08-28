@@ -21,7 +21,7 @@ class PriceService extends Service
 
     const CACHE_TTL = 59;
 
-    const CACHE_SUB_SECONDS = 9000;
+    const CACHE_SUB_SECONDS = 900;
 
     const CACHE_KEY_SECTION_CHART = 'chart';
 
