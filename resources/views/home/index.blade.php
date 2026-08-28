@@ -7,8 +7,8 @@
     <div class="container-fluid">
         <div x-data="summary()">
             <div class="row">
-                <div class="col-12 col-xl-8 mx-auto pt-2">
-                    <canvas id="chart-prices-CARAT_18" height="96"></canvas>
+                <div class="col-12 col-xl-8 mx-auto py-2">
+                    <canvas id="chart-prices-CARAT_18" style="height: 256px;"></canvas>
                 </div>
             </div>
             <template x-if="carats.length">
@@ -164,7 +164,8 @@
                         data: data,
                         options: {
                             responsive: true,
-                            maintainAspectRatio: true,
+                            maintainAspectRatio: false,
+                            aspectRatio: 2,
                             plugins: {
                                 legend: {
                                     display: true,
@@ -172,7 +173,7 @@
                                     labels: {
                                         font: {
                                             family: '"Vazirmatn Variable", sans-serif'
-                                        } 
+                                        }
                                     }
                                 }
                             },
