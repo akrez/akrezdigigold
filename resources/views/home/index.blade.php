@@ -7,7 +7,7 @@
     <div class="container-fluid">
         <div x-data="summary()">
             <div class="row">
-                <div class="col-12 col-xl-8 mx-auto py-2">
+                <div class="col-12 col-xl-8 mx-auto py-4">
                     <canvas id="chart-prices-CARAT_18" style="height: 256px;"></canvas>
                 </div>
             </div>
@@ -15,7 +15,7 @@
                 <div class="row">
                     <div class="col-12 col-xl-8 mx-auto">
 
-                        <ul class="nav nav-pills nav-fill gap-0 pt-2">
+                        <ul class="nav nav-pills nav-fill gap-0 p-0">
                             <template x-for="carat in carats" :key="carat.name">
                                 <li class="nav-item">
                                     <button type="button" class="nav-link w-100" :class="activeCarat === carat.name ? 'active' : ''" @click="activeCarat = carat.name" x-text="carat.trans"></button>
