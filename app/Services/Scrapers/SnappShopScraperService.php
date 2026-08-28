@@ -273,7 +273,7 @@ class SnappShopScraperService extends ScraperService
             'sec-fetch-dest' => 'empty',
             'sec-fetch-mode' => 'cors',
             'sec-fetch-site' => 'same-site',
-            'user-agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/'.$v.'.00 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/'.$v.'.00',
+            'user-agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/'.$v.'.00 (KHTML, like Gecko) Chrome/'.$v.'.0.0.0 Safari/'.$v.'.00',
             'x-origin' => 'https://snappshop.ir',
         ];
     }
