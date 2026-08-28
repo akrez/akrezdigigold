@@ -6,7 +6,7 @@ use App\Enums\SourceEnum;
 
 class MilligoldPriceService extends PriceService
 {
-    protected function getEndpoint(): string
+    public function getEndpoint(): string
     {
         return 'https://milli.gold/api/v1/public/milli-price/detail';
     }
@@ -16,7 +16,7 @@ class MilligoldPriceService extends PriceService
         return SourceEnum::MILLIGOLD;
     }
 
-    protected function extractPrice(mixed $payload): ?int
+    public function extractPrice(mixed $payload): ?int
     {
         $price = $payload['data']['price18'] ?? null;
         if ($price === null) {

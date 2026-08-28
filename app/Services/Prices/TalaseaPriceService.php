@@ -6,7 +6,7 @@ use App\Enums\SourceEnum;
 
 class TalaseaPriceService extends PriceService
 {
-    protected function getEndpoint(): string
+    public function getEndpoint(): string
     {
         return 'https://api.talasea.ir/api/market/getGoldPrice';
     }
@@ -16,7 +16,7 @@ class TalaseaPriceService extends PriceService
         return SourceEnum::TALASEA;
     }
 
-    protected function extractPrice(mixed $payload): ?int
+    public function extractPrice(mixed $payload): ?int
     {
         $price = $payload['price'] ?? null;
         if ($price === null) {

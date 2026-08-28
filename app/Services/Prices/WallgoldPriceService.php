@@ -6,7 +6,7 @@ use App\Enums\SourceEnum;
 
 class WallgoldPriceService extends PriceService
 {
-    protected function getEndpoint(): string
+    public function getEndpoint(): string
     {
         return 'https://api.wallgold.ir/api/v1/price?side=buy&symbol=GLD_18C_750TMN';
     }
@@ -16,7 +16,7 @@ class WallgoldPriceService extends PriceService
         return SourceEnum::WALLGOLD;
     }
 
-    protected function extractPrice(mixed $payload): ?int
+    public function extractPrice(mixed $payload): ?int
     {
         $price = $payload['result']['price'] ?? null;
         if ($price === null) {

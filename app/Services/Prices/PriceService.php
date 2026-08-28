@@ -2,6 +2,7 @@
 
 namespace App\Services\Prices;
 
+use App\Enums\CaratEnum;
 use App\Enums\SourceEnum;
 use App\Services\Service;
 
@@ -9,11 +10,16 @@ abstract class PriceService extends Service
 {
     abstract public function getSourceEnum(): SourceEnum;
 
-    abstract protected function getEndpoint(): string;
+    abstract public function getEndpoint(): string;
 
-    abstract protected function extractPrice(mixed $payload): ?int;
+    abstract public function extractPrice(mixed $payload): ?int;
 
-    protected function getHeaders(): array
+    public function getCaratEnum(): CaratEnum
+    {
+        return CaratEnum::CARAT_18;
+    }
+
+    public function getHeaders(): array
     {
         $v = rand(100, 200);
 

@@ -6,7 +6,7 @@ use App\Enums\SourceEnum;
 
 class TechnogoldPriceService extends PriceService
 {
-    protected function getEndpoint(): string
+    public function getEndpoint(): string
     {
         return 'https://api2.technogold.gold/customer/tradeables/price-history?type=daily';
     }
@@ -16,7 +16,7 @@ class TechnogoldPriceService extends PriceService
         return SourceEnum::TECHNOGOLD;
     }
 
-    protected function extractPrice(mixed $payload): ?int
+    public function extractPrice(mixed $payload): ?int
     {
         $data = $payload['results']['data'] ?? null;
         if (! is_array($data) || empty($data)) {
