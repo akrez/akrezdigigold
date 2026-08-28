@@ -7,7 +7,7 @@
     <div class="container-fluid">
         <div x-data="summary()">
             <div class="row">
-                <div class="col-12 col-xl-8 mx-auto py-4">
+                <div class="col-12 col-xl-8 mx-auto py-3">
                     <canvas id="chart-prices-CARAT_18" style="height: 256px;"></canvas>
                 </div>
             </div>
