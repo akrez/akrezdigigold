@@ -80,15 +80,16 @@ class PriceService extends Service
                 'prices' => array_fill_keys(CaratEnum::names(), array_fill_keys(SourceEnum::names(), [])),
             ];
             $prices = Price::query()
-                ->whereTime('created_at', '>=', now()->subSeconds(self::CACHE_SUB_SECONDS))
+                ->where('created_at', '>=', now()->subSeconds(self::CACHE_SUB_SECONDS))
                 ->orderBy('created_at', 'ASC')
                 ->get();
             foreach ($prices as $price) {
                 $result['prices'][$price->carat][$price->source][] = [
-                    'price'=> $price->price,
-                    'created_at'=> $price->created_at->format('Y-m-d H:i:s'),
+                    'price' => $price->price,
+                    'created_at' => $price->created_at->format('Y-m-d H:i:s'),
                 ];
             }
+
             return $result;
         });
     }
