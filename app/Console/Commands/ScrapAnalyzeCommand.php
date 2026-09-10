@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Enums\SourceEnum;
+use App\Events\ScrapAnalyzed;
 use App\Services\Scrapers\DigiKalaScraperService;
 use App\Services\Scrapers\SnappShopScraperService;
 use App\Services\ScrapService;
@@ -42,6 +43,8 @@ class ScrapAnalyzeCommand extends Command
         $status = $scraperService->analyze($scrap);
         if ($status > 200) {
             app(ScrapService::class)->forgetCache();
+            $scrap->refresh();
+            ScrapAnalyzed::dispatch($scrap);
         }
         $this->info('End');
 

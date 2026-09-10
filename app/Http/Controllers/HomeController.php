@@ -14,7 +14,7 @@ class HomeController extends Controller
         $priceService = app(PriceService::class);
 
         return view('home.index', [
-            'summary' => $scrapService->buildShortSummaryCache(10),
+            'summary' => $scrapService->buildShortSummaryCache(),
             'chart' => $priceService->buildChartCache(),
         ]);
     }

@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'bale' => [
+        'bot_token' => env('BALE_BOT_TOKEN'),
+        'channel' => env('BALE_CHANNEL_ID'),
+    ],
 ];

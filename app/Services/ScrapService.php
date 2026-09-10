@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Cache;
 
 class ScrapService extends Service
 {
+    const SHORT_SUMMARY_LENGTH = 10;
+
     const CACHE_TTL = 7200;
 
     const CACHE_KEY_SECTION_SUMMARY = 'summary';
@@ -27,13 +29,13 @@ class ScrapService extends Service
         Cache::forget($this->getCacheKey(self::CACHE_KEY_SECTION_SHORT_SUMMARY));
     }
 
-    public function buildShortSummaryCache(int $length = 10): array
+    public function buildShortSummaryCache(): array
     {
-        return Cache::remember($this->getCacheKey(self::CACHE_KEY_SECTION_SHORT_SUMMARY), self::CACHE_TTL, function () use ($length) {
+        return Cache::remember($this->getCacheKey(self::CACHE_KEY_SECTION_SHORT_SUMMARY), self::CACHE_TTL, function () {
             $summary = $this->buildSummaryCache();
             foreach ($summary['scraps'] as $scrapKey => $scrap) {
                 foreach ($scrap['variants'] as $carat => $variants) {
-                    $summary['scraps'][$scrapKey]['variants'][$carat] = array_slice($variants, 0, $length);
+                    $summary['scraps'][$scrapKey]['variants'][$carat] = array_slice($variants, 0, self::SHORT_SUMMARY_LENGTH);
                 }
             }
 
