@@ -28,18 +28,17 @@ class NotifyScrapStatus implements ShouldQueue
         }
         $caption = [
             '*'.$variant['ttl'].'*',
-            $scrapSummary['source']['trans'],
-            CaratEnum::CARAT_18->trans(),
-            $variant['siz'].' '.'گرم',
-            '*قیمت* '.$variant['prcf'],
-            '*قیمت هر گرم* '.$variant['ppgf'],
+            'بهترین قیمت سکه و شمش طلای '.$scrapSummary['source']['trans'].' تا ساعت '. verta()->format('H:i') .' تاریخ '.verta()->format('d %B Y'),
+            '*عیار*' . ' ' . CaratEnum::CARAT_18->trans(),
+            '*وزن*' . ' ' . $variant['siz'].' '.'گرم',
+            '*قیمت*' . ' ' . $variant['prcf'],
+            '*قیمت هر گرم*' . ' ' . $variant['ppgf'],
             '',
             $variant['url'],
             '',
-            'بهترین قیمت سکه و شمش طلای '.$scrapSummary['source']['trans'].' در '. verta()->format('Y-m-d H'),
-            $this->bale->getChannelId(),
-            '',
             '#SCRAP_'.$scrapSummary['source']['name'],
+            '',
+            $this->bale->getChannelId(),
         ];
 
         $this->bale->sendPhoto($variant['img'], implode("\n", $caption), [
