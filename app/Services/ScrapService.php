@@ -65,7 +65,7 @@ class ScrapService extends Service
     {
         $scrap = Scrap::query()
             ->where('source', $sourceEnum->name)
-            ->whereTime('created_at', '>=', now()->subSeconds($createdAtSecondsAgo))
+            ->where('created_at', '>=', now()->subSeconds($createdAtSecondsAgo))
             ->whereNotNull('completed_at')
             ->orderBy('completed_at', 'DESC')
             ->first();
