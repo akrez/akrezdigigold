@@ -36,8 +36,10 @@ class NotifyScrapStatus implements ShouldQueue
             '',
             $variant['url'],
             '',
-            'بهترین قیمت سکه و شمش طلای دیجی کالا و اسنپ در هر ساعت',
+            'بهترین قیمت سکه و شمش طلای '.$scrapSummary['source']['trans'].' در '. verta()->format('Y-m-d H'),
             $this->bale->getChannelId(),
+            '',
+            '#SCRAP_'.$scrapSummary['source']['name'],
         ];
 
         $this->bale->sendPhoto($variant['img'], implode("\n", $caption), [
