@@ -7,6 +7,8 @@ use App\Events\ScrapAnalyzed;
 use App\Services\BaleService;
 use App\Services\ScrapService;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 class NotifyScrapStatus implements ShouldQueue
 {
@@ -26,6 +28,8 @@ class NotifyScrapStatus implements ShouldQueue
         if (! $variant) {
             return;
         }
+        $hashtag = '#SCRAP_'.$scrapSummary['source']['name'];
+        $this->deleteMessages($hashtag);
         $caption = [
             '*'.$variant['ttl'].'*',
             implode(' ', [
@@ -36,14 +40,14 @@ class NotifyScrapStatus implements ShouldQueue
                 'تاریخ',
                 verta()->format('d %B Y'),
             ]),
-            '*عیار*' . ' ' . CaratEnum::CARAT_18->trans(),
-            '*وزن*' . ' ' . $variant['siz'].' '.'گرم',
-            '*قیمت*' . ' ' . $variant['prcf'],
-            '*قیمت هر گرم*' . ' ' . $variant['ppgf'],
+            '*عیار*'.' '.CaratEnum::CARAT_18->trans(),
+            '*وزن*'.' '.$variant['siz'].' '.'گرم',
+            '*قیمت*'.' '.$variant['prcf'],
+            '*قیمت هر گرم*'.' '.$variant['ppgf'],
             '',
             $variant['url'],
             '',
-            '#SCRAP_'.$scrapSummary['source']['name'],
+            $hashtag,
             '',
             $this->bale->getChannelId(),
         ];
@@ -51,6 +55,23 @@ class NotifyScrapStatus implements ShouldQueue
         $this->bale->sendPhoto($variant['img'], implode("\n", $caption), [
             'parse_mode' => 'Markdown',
         ]);
+    }
+
+    protected function deleteMessages(string $filter)
+    {
+        $updates = $this->bale->getUpdates(24)->json('result');
+        foreach ($updates as $update) {
+            if (
+                Str::contains(Arr::get($update, 'message.text'), $filter) ||
+                Str::contains(Arr::get($update, 'message.caption'), $filter)
+            ) {
+                $messageId = Arr::get($update, 'message.message_id');
+                $chatId = Arr::get($update, 'message.chat.id');
+                if ($chatId && $messageId) {
+                    $this->bale->deleteMessage($chatId, $messageId);
+                }
+            }
+        }
     }
 
     protected function extractScrapSource(array &$summary, string $sourceEnumName): ?array
