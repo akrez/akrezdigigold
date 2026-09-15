@@ -28,7 +28,7 @@ class NotifyScrapStatus implements ShouldQueue
         }
         $caption = [
             '*'.$variant['ttl'].'*',
-            'بهترین قیمت سکه و شمش طلای '.$scrapSummary['source']['trans'].' تا ساعت '. verta()->format('H:i') .' تاریخ '.verta()->format('d %B Y'),
+            'بهترین قیمت سکه و شمش طلای'.' *'.$scrapSummary['source']['trans'].'* '.'تا ساعت'.' '. verta()->format('H:i') .' تاریخ '.verta()->format('d %B Y'),
             '*عیار*' . ' ' . CaratEnum::CARAT_18->trans(),
             '*وزن*' . ' ' . $variant['siz'].' '.'گرم',
             '*قیمت*' . ' ' . $variant['prcf'],
