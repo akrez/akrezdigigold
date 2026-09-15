@@ -6,18 +6,14 @@ use Illuminate\Support\Facades\Log;
 
 class Service
 {
-    protected function sanitizeNumber(mixed $value): ?int
+    public function sanitizeNumber(mixed $value): ?float
     {
-        if (is_int($value)) {
-            return $value;
+        if (is_numeric($value)) {
+            return floatval($value);
         }
-        if (is_float($value)) {
-            return intval($value);
-        }
-        if (is_string($value)) {
-            $cleaned = preg_replace('/[^\\d.]+/', '', $value);
-
-            return is_numeric($cleaned) ? intval(floatval($cleaned)) : null;
+        $cleaned = preg_replace('/[^\\d.]+/', '', $value);
+        if (is_numeric($cleaned)) {
+            return floatval($cleaned);
         }
 
         return null;
