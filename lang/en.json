@@ -3,5 +3,12 @@
     "enums.SourceEnum.SNAPSHOP": "Snapshop",
     "enums.CaratEnum.CARAT_18": "18 carat",
     "enums.CaratEnum.CARAT_24": "24 carat",
-    "enums.CaratEnum.CARAT_9999": "999.9 carat"
+    "enums.CaratEnum.CARAT_900": "900 carat",
+    "enums.CaratEnum.CARAT_9999": "999.9 carat",
+    "categories.bullion-pack": "Bullion Pack",
+    "categories.bullion": "Bullion",
+    "categories.parsian-gold-coin": "Parsian Gold Coin",
+    "categories.melt-gold": "Melt Gold",
+    "categories.melted-gold-in-installments": "Melted Gold In Installments",
+    "categories.gold-coin-bullion-molten-gold": "Gold Coin, Bullion, Molten Gold"
 }

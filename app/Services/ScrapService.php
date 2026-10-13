@@ -7,6 +7,7 @@ use App\Enums\SourceEnum;
 use App\Models\Scrap;
 use App\Models\Variant;
 use Illuminate\Support\Facades\Cache;
+use Lang;
 
 class ScrapService extends Service
 {
@@ -35,7 +36,7 @@ class ScrapService extends Service
             $summary = $this->buildSummaryCache();
             foreach ($summary['scraps'] as $scrapKey => $scrap) {
                 foreach ($scrap['variants'] as $carat => $variants) {
-                    $summary['scraps'][$scrapKey]['variants'][$carat] = array_slice($variants, 0, self::SHORT_SUMMARY_LENGTH);
+                    $summary['scraps'][$scrapKey]['variants'][$carat] = array_slice((array) $variants, 0, self::SHORT_SUMMARY_LENGTH);
                 }
             }
 
@@ -49,9 +50,33 @@ class ScrapService extends Service
             $result = [
                 'carats' => CaratEnum::collection(),
                 'scraps' => [],
+                'categories' => [],
+                'sources' => [],
             ];
-            foreach (SourceEnum::cases() as $sourceEnum) {
-                $scrap = $this->buildScrapSummary($sourceEnum, self::CACHE_TTL);
+
+            $latestScraps = Scrap::query()
+                ->select('source', 'category')
+                ->selectRaw('MAX(id) as id')
+                ->whereNotNull('completed_at')
+                ->where('created_at', '>=', now()->subSeconds(self::CACHE_TTL))
+                ->groupBy('source', 'category')
+                ->get();
+            foreach ($latestScraps as $scrap) {
+                $result['categories'][$scrap->category] = [
+                    'name' => $scrap->category,
+                    'trans' => Lang::has('categories.'.$scrap->category) ? __('categories.'.$scrap->category) : $scrap->category,
+                ];
+                $result['sources'][$scrap->source] = SourceEnum::fromString($scrap->source)->resource();
+            }
+            $result['categories'] = array_values($result['categories']);
+            $result['sources'] = array_values($result['sources']);
+
+            $scraps = Scrap::query()
+                ->whereIn('id', $latestScraps->pluck('id'))
+                ->get();
+
+            foreach ($scraps as $scrap) {
+                $scrap = $this->buildScrapSummary($scrap);
                 if ($scrap) {
                     $result['scraps'][] = $scrap;
                 }
@@ -61,20 +86,11 @@ class ScrapService extends Service
         });
     }
 
-    protected function buildScrapSummary(SourceEnum $sourceEnum, int $createdAtSecondsAgo): array
+    protected function buildScrapSummary(Scrap $scrap): array
     {
-        $scrap = Scrap::query()
-            ->where('source', $sourceEnum->name)
-            ->where('created_at', '>=', now()->subSeconds($createdAtSecondsAgo))
-            ->whereNotNull('completed_at')
-            ->orderBy('completed_at', 'DESC')
-            ->first();
-        if (! $scrap) {
-            return [];
-        }
-
         $result = [
-            'source' => $sourceEnum->resource(),
+            'source' => $scrap->source,
+            'category' => $scrap->category,
             'completed_at' => $scrap->completed_at,
             'variants' => array_fill_keys(CaratEnum::names(), null),
         ];

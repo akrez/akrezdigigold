@@ -20,7 +20,7 @@ class NotifyScrapStatus implements ShouldQueue
     public function handle(ScrapAnalyzed $event): void
     {
         $summary = $this->scrapService->buildShortSummaryCache();
-        $scrapSummary = $this->extractScrapSource($summary, $event->scrap->source);
+        $scrapSummary = $this->extractScrapSource($summary, $event->scrap);
         if (! $scrapSummary) {
             return;
         }
@@ -76,9 +76,9 @@ class NotifyScrapStatus implements ShouldQueue
 
     protected function extractScrapSource(array &$summary, string $sourceEnumName): ?array
     {
-        foreach ($summary['scraps'] as $scrap) {
-            if ($scrap['source']['name'] === $sourceEnumName) {
-                return $scrap;
+        foreach ($summary['sources'] as $source) {
+            if ($source['name'] === $sourceEnumName) {
+                return $source['trans'];
             }
         }
 

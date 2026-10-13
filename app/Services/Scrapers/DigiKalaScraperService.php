@@ -7,6 +7,7 @@ use App\Enums\SourceEnum;
 use App\Models\Page;
 use App\Models\Product;
 use App\Models\Scrap;
+use Arr;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
@@ -19,15 +20,17 @@ class DigiKalaScraperService extends ScraperService
         return SourceEnum::DIGIKALA;
     }
 
-    protected function callPage(array $pages): array
+    protected function callPage(string $category, array $pages): array
     {
-        return Http::pool(fn ($pool) => collect($pages)->map(fn ($page) => $pool->as($page)
-            ->withHeaders($this->getHeaders())
-            ->get(self::API_BASE.'/v1/categories/bullion/search/', [
-                'has_selling_stock' => 1,
-                'page' => $page,
-                'sort' => 7,
-            ])
+        return Http::pool(fn ($pool) => collect($pages)->map(
+            fn ($page) => $pool->as($page)
+                ->withHeaders($this->getHeaders())
+                ->get(self::API_BASE."/discovery/api/v2/categories/{$category}/products", [
+                    'has_selling_stock' => 1,
+                    'page' => $page,
+                    'sort' => 7,
+                    'columns_per_page' => 5,
+                ])
         )->toArray());
     }
 
@@ -48,16 +51,16 @@ class DigiKalaScraperService extends ScraperService
         $this->startScrap($scrap);
     }
 
-    protected function processPages(Scrap $scrap, array $pageNumbers)
+    protected function processPages(Scrap $scrap, array $pageNumbers): int
     {
         $totalPages = 0;
         try {
-            $responses = $this->callPage($pageNumbers);
+            $responses = $this->callPage($scrap->category, $pageNumbers);
             foreach ($responses as $pageNumber => $response) {
                 if ($response instanceof ConnectionException) {
                     $this->logError($response);
                 } elseif ($response->successful()) {
-                    $totalPages = intval($totalPages ?: $response->json('data.pager.total_pages'));
+                    $totalPages = intval($totalPages ?: $this->extractTotalPages($response));
                     $page = $this->updateOrCreatePage($scrap->id, $pageNumber);
                     if ($page) {
                         $this->completePage(
@@ -72,6 +75,19 @@ class DigiKalaScraperService extends ScraperService
         }
 
         return $totalPages;
+    }
+
+    protected function extractTotalPages(mixed $response): int
+    {
+        $widgets = (array) $response->json('data.widgets', []);
+        foreach ($widgets as $widget) {
+            $totalPages = Arr::get($widget, 'data.pager.total_pages');
+            if ($totalPages !== null) {
+                return $totalPages;
+            }
+        }
+
+        return 0;
     }
 
     public function createProducts(Scrap $scrap): void
@@ -104,7 +120,8 @@ class DigiKalaScraperService extends ScraperService
             if (! $response->successful()) {
                 return $response->status();
             }
-            $items = (array) $response->json('data.products', []);
+
+            $items = $this->extractProductsFromResponse($response);
             $saved = false;
             foreach ($items as $product) {
                 $product = $this->updateOrCreateProduct($scrap->id, $page->id, $product['id'], [
@@ -123,6 +140,30 @@ class DigiKalaScraperService extends ScraperService
         }
 
         return static::ERROR_CATCH;
+    }
+
+    protected function extractProductsFromResponse(mixed $response): array
+    {
+        $widgets = (array) $response->json('data.widgets', []);
+        $items = [];
+
+        foreach ($widgets as $widget) {
+            $subWidgets = Arr::get($widget, 'data.widgets', []);
+            foreach ($subWidgets as $subWidget) {
+                if (Arr::get($subWidget, 'type') === 'product' && Arr::has($subWidget, 'data.id')) {
+                    $items[] = Arr::get($subWidget, 'data');
+                }
+            }
+
+            $widgetProducts = Arr::get($widget, 'data.products', []);
+            foreach ($widgetProducts as $product) {
+                if (Arr::has($product, 'id')) {
+                    $items[] = $product;
+                }
+            }
+        }
+
+        return $items;
     }
 
     public function createVariants(Scrap $scrap): void
@@ -150,10 +191,11 @@ class DigiKalaScraperService extends ScraperService
 
     protected function callProduct(array $productIds): array
     {
-        return Http::pool(fn ($pool) => collect($productIds)->map(fn ($productId) => $pool->as($productId)
-            ->withHeaders($this->getHeaders())
-            ->timeout(30)
-            ->get(self::API_BASE."/v2/product/{$productId}/")
+        return Http::pool(fn ($pool) => collect($productIds)->map(
+            fn ($productId) => $pool->as($productId)
+                ->withHeaders($this->getHeaders())
+                ->timeout(30)
+                ->get(self::API_BASE."/v2/product/{$productId}/")
         )->toArray());
     }
 
@@ -169,13 +211,14 @@ class DigiKalaScraperService extends ScraperService
                 return $response->status();
             }
             $data = (array) $response->json('data.product.variants');
+            $productData = (array) $response->json('data.product', []);
             $saved = false;
             foreach ($data as $variant) {
                 $variant = $this->updateOrCreateVariant(
                     $scrapId,
                     $product->id,
                     $variant['id'] ?? '',
-                    $this->extractCarat($response->json('data.product')),
+                    $this->extractCarat($productData),
                     trim($variant['seller']['title'] ?? null),
                     $this->extractSize($variant),
                     floatval($variant['price']['selling_price'] ?? 0)
@@ -209,6 +252,8 @@ class DigiKalaScraperService extends ScraperService
                                 case 24:
                                 case 995:
                                     return CaratEnum::CARAT_24;
+                                case 900:
+                                    return CaratEnum::CARAT_900;
                                 case 999:
                                 case 999.9:
                                     return CaratEnum::CARAT_9999;

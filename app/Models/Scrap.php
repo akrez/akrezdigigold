@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $id
  * @property string $source
  * @property string $scrap_key
+ * @property string $category
  * @property Carbon|null $started_at
  * @property Carbon|null $completed_at
  * @property Carbon|null $created_at
@@ -28,6 +29,7 @@ class Scrap extends Model
     protected $fillable = [
         'source',
         'scrap_key',
+        'category',
         'started_at',
         'completed_at',
     ];

@@ -15,11 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('source', 16);
             $table->string('scrap_key', 32);
+            $table->string('category', 64);
             $table->timestamp('started_at')->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
 
-            $table->unique(['source', 'scrap_key']);
+            $table->unique(['source', 'scrap_key', 'category']);
         });
     }
 

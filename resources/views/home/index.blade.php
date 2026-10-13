@@ -11,27 +11,22 @@
                     <canvas id="chart-prices-CARAT_18" style="height: 256px;"></canvas>
                 </div>
             </div>
-            <template x-if="carats.length">
+            <template x-if="tabs.length">
                 <div class="row">
                     <div class="col-12 col-xl-8 mx-auto">
 
                         <ul class="nav nav-pills nav-fill gap-0 p-0">
-                            <template x-for="carat in carats" :key="carat.name">
+                            <template x-for="tab in tabs" :key="tab.key">
                                 <li class="nav-item">
-                                    <button type="button" class="nav-link w-100" :class="activeCarat === carat.name ? 'active' : ''" @click="activeCarat = carat.name" x-text="carat.trans"></button>
+                                    <button type="button" class="nav-link w-100 border border-primary p-2"
+                                        :class="activeTabKey === tab.key ? 'active' : ''" @click="activeTabKey = tab.key">
+                                        <span class="small" x-text="tab.trans.source"></span><br>
+                                        <span class="small" x-text="tab.trans.category"></span><br>
+                                        <span class="small" x-text="tab.trans.carat"></span>
+                                    </button>
                                 </li>
                             </template>
                         </ul>
-
-                        <template x-if="sources.length">
-                            <ul class="nav nav-pills nav-fill gap-0 pt-2">
-                                <template x-for="source in sources" :key="source.name">
-                                    <li class="nav-item">
-                                        <button type="button" class="nav-link w-100" :class="activeSource === source.name ? 'active' : ''" @click="activeSource = source.name" x-text="source.trans"></button>
-                                    </li>
-                                </template>
-                            </ul>
-                        </template>
 
                         <div class="table-responsive">
                             <table class="table table-bordered table-sm align-middle mt-2">
@@ -43,27 +38,27 @@
                                         <th>قیمت</th>
                                     </tr>
                                 </thead>
-                                <template x-for="scrap in scraps" :key="scrap.source.name">
-                                    <template x-for="(variants, variantCarat) in scrap.variants" :key="variantCarat">
-                                        <template x-for="(variant, index) in variants.slice(0, 10)" :key="variant.id">
-                                            <tbody :class="{ 'table-secondary': index % 2 == 1 }"
-                                                x-show="activeSource === scrap.source.name && activeCarat === variantCarat">
-                                                <tr>
-                                                    <td rowspan="2" class="text-center p-0">
-                                                        <img :src="variant.img" class="max-50px" alt="">
-                                                    </td>
-                                                    <td colspan="2">
-                                                        <a class="text-decoration-none" target="_blank" :href="variant.url" x-text="variant.ttl"></a>
-                                                    </td>
-                                                    <td x-text="variant.sel"></td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="font-monospace" x-text="variant.ppgf"></td>
-                                                    <td class="font-monospace" x-text="variant.siz"></td>
-                                                    <td class="font-monospace" x-text="variant.prcf"></td>
-                                                </tr>
-                                            </tbody>
-                                        </template>
+                                <template x-for="tab in tabs" :key="tab.key">
+                                    <template x-for="(variant, index) in (tab.variants || []).slice(0, 10)"
+                                        :key="variant.id">
+                                        <tbody :class="{ 'table-secondary': index % 2 == 1 }"
+                                            x-show="activeTabKey === tab.key">
+                                            <tr>
+                                                <td rowspan="2" class="text-center p-0">
+                                                    <img :src="variant.img" class="max-50px" alt="">
+                                                </td>
+                                                <td colspan="2">
+                                                    <a class="text-decoration-none" target="_blank" :href="variant.url"
+                                                        x-text="variant.ttl"></a>
+                                                </td>
+                                                <td x-text="variant.sel"></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="font-monospace" x-text="variant.ppgf"></td>
+                                                <td class="font-monospace" x-text="variant.siz"></td>
+                                                <td class="font-monospace" x-text="variant.prcf"></td>
+                                            </tr>
+                                        </tbody>
                                     </template>
                                 </template>
                             </table>
@@ -82,8 +77,9 @@
                 carats: [],
                 scraps: [],
                 sources: [],
-                activeCarat: '',
-                activeSource: '',
+                categories: [],
+                tabs: [],
+                activeTabKey: '',
                 chartData: [],
                 init() {
                     const summary = @json($summary);
@@ -91,15 +87,51 @@
 
                     this.carats = summary.carats || [];
                     this.scraps = summary.scraps || [];
-                    this.scraps.forEach(scrap => {
-                        this.sources.push(scrap.source);
-                    });
-                    this.activeCarat = this.carats[0]?.name || '';
-                    this.activeSource = this.sources[0]?.name || '';
+                    this.sources = summary.sources || [];
+                    this.categories = summary.categories || [];
+
+                    this.buildTabs();
+                    this.activeTabKey = this.tabs[0]?.key || '';
+
                     this.initChart('CARAT_18', chart.prices.CARAT_18);
                     this.$nextTick(() => {
                         this.drawChart('CARAT_18', 'chart-prices-CARAT_18');
                     });
+                },
+                getSourceTrans(sourceName) {
+                    const s = this.sources.find(x => x.name === sourceName);
+                    return s ? s.trans : sourceName;
+                },
+                getCategoryTrans(categoryName) {
+                    const c = this.categories.find(x => x.name === categoryName);
+                    return c ? c.trans : categoryName;
+                },
+                getCaratTrans(caratKey) {
+                    const c = this.carats.find(x => x.name === caratKey);
+                    return c ? c.trans : caratKey;
+                },
+                buildTabs() {
+                    const tabs = [];
+                    this.scraps.forEach(scrap => {
+                        if (!scrap.variants) return;
+                        Object.entries(scrap.variants).forEach(([caratKey, variants]) => {
+                            if (variants && variants.length > 0) {
+                                tabs.push({
+                                    key: scrap.source + '_' + scrap.category + '_' + caratKey,
+                                    source: scrap.source,
+                                    category: scrap.category,
+                                    carat: caratKey,
+                                    trans: {
+                                        source: this.getSourceTrans(scrap.source),
+                                        category: this.getCategoryTrans(scrap.category),
+                                        carat: this.getCaratTrans(caratKey),
+                                    },
+                                    variants: variants,
+                                });
+                            }
+                        });
+                    });
+                    this.tabs = tabs;
                 },
                 initChart(chartKey, chartData) {
                     if (!chartData) return;
@@ -145,7 +177,7 @@
                     };
                 },
                 drawChart(chartKey, chartDomId) {
-                    data = this.chartData[chartKey];
+                    const data = this.chartData[chartKey];
 
                     const canvas = document.getElementById(chartDomId);
                     if (!canvas) {
@@ -199,7 +231,7 @@
                                         font: {
                                             family: '"Vazirmatn Variable", sans-serif'
                                         },
-                                        callback: function(value, index, ticks) {
+                                        callback: function (value, index, ticks) {
                                             return (value / 1000).toFixed(0);
                                         }
                                     }

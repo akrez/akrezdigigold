@@ -8,5 +8,6 @@ enum CaratEnum
 
     case CARAT_18;
     case CARAT_24;
+    case CARAT_900;
     case CARAT_9999;
 }

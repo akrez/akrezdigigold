@@ -11,7 +11,7 @@ use Illuminate\Console\Command;
 
 class ScrapAnalyzeCommand extends Command
 {
-    protected $signature = 'scrap:analyze {source : Source to scrape} {--key= : Scrap key (default: YmdH0000)}';
+    protected $signature = 'scrap:analyze {source : Source to scrape} {category : Category/slug to scrape} {--key= : Scrap key (default: YmdH0000)}';
 
     protected $description = 'scrap analyze';
 
@@ -20,7 +20,14 @@ class ScrapAnalyzeCommand extends Command
         $source = $this->argument('source') ?? null;
         $source = strtoupper($source);
 
+        $category = $this->argument('category');
         $scrapKey = $this->option('key') ?? now()->format('YmdH0000');
+
+        if (! $category) {
+            $this->error('Invalid Category');
+
+            return Command::FAILURE;
+        }
 
         $scraperServiceClassName = match ($source) {
             SourceEnum::DIGIKALA->name => DigiKalaScraperService::class,
@@ -35,7 +42,7 @@ class ScrapAnalyzeCommand extends Command
 
         $scraperService = app($scraperServiceClassName);
 
-        $scrap = $scraperService->firstOrCreateScrap($scrapKey);
+        $scrap = $scraperService->firstOrCreateScrap($scrapKey, $category);
         if (! $scrap) {
             return Command::FAILURE;
         }

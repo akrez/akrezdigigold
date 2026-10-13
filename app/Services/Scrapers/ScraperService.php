@@ -68,12 +68,13 @@ abstract class ScraperService extends Service
         return $scrap->update(['started_at' => now()]);
     }
 
-    public function firstOrCreateScrap(string $scrapKey): ?Scrap
+    public function firstOrCreateScrap(string $scrapKey, string $category): ?Scrap
     {
         try {
             return Scrap::firstOrCreate([
                 'source' => $this->getSourceEnum()->name,
                 'scrap_key' => $scrapKey,
+                'category' => $category,
             ]);
         } catch (\Exception $e) {
             $this->logError($e);

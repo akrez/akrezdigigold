@@ -19,19 +19,20 @@ class SnappShopScraperService extends ScraperService
         return SourceEnum::SNAPSHOP;
     }
 
-    protected function callPage(array $pages): array
+    protected function callPage(string $category, array $pages): array
     {
-        return Http::pool(fn ($pool) => collect($pages)->map(fn ($page) => $pool->as($page)
-            ->withHeaders($this->getHeaders())
-            ->timeout(30)
-            ->post(self::API_BASE.'/landing/v2?lat=35.00&lng=51.00', [
-                'exclude_filters' => true,
-                'is_available' => true,
-                'page_type' => 'category',
-                'render' => 4,
-                'skip' => $page,
-                'slug' => 'gold-bullion',
-            ])
+        return Http::pool(fn ($pool) => collect($pages)->map(
+            fn ($page) => $pool->as($page)
+                ->withHeaders($this->getHeaders())
+                ->timeout(30)
+                ->post(self::API_BASE.'/landing/v2?lat=35.00&lng=51.00', [
+                    'exclude_filters' => true,
+                    'is_available' => true,
+                    'page_type' => 'category',
+                    'render' => 4,
+                    'skip' => $page,
+                    'slug' => $category,
+                ])
         )->toArray());
     }
 
@@ -56,7 +57,7 @@ class SnappShopScraperService extends ScraperService
     {
         $totalPages = 0;
         try {
-            $responses = $this->callPage($pageNumbers);
+            $responses = $this->callPage($scrap->category, $pageNumbers);
             foreach ($responses as $pageNumber => $response) {
                 if ($response instanceof ConnectionException) {
                     $this->logError($response);
@@ -157,13 +158,14 @@ class SnappShopScraperService extends ScraperService
 
     protected function callProduct(array $productIds): array
     {
-        return Http::pool(fn ($pool) => collect($productIds)->map(fn ($productId) => $pool->as($productId)
-            ->withHeaders($this->getHeaders())
-            ->timeout(30)
-            ->get(self::API_BASE.'/products/v2/'.$productId, [
-                'lat' => 35.00,
-                'lng' => 51.00,
-            ])
+        return Http::pool(fn ($pool) => collect($productIds)->map(
+            fn ($productId) => $pool->as($productId)
+                ->withHeaders($this->getHeaders())
+                ->timeout(30)
+                ->get(self::API_BASE.'/products/v2/'.$productId, [
+                    'lat' => 35.00,
+                    'lng' => 51.00,
+                ])
         )->toArray());
     }
 
@@ -227,6 +229,8 @@ class SnappShopScraperService extends ScraperService
                         case 24:
                         case 995:
                             return CaratEnum::CARAT_24;
+                        case 900:
+                            return CaratEnum::CARAT_900;
                         case 999:
                         case 999.9:
                             return CaratEnum::CARAT_9999;
