@@ -1,14 +1,15 @@
 {
-    "enums.SourceEnum.DIGIKALA": "دیجی‌کالا",
-    "enums.SourceEnum.SNAPSHOP": "اسنپ‌شاپ",
+    "categories.bullion": "شمش طلا",
+    "categories.bullion-pack": "پک شمش و پلاک طلا",
+    "categories.gold-coin-bullion-molten-gold": "سکه، شمش و طلای آب‌شده",
+    "categories.gold-coin-collection": "مجموعه سکه طلا",
+    "categories.melt-gold": "طلای آب‌شده",
+    "categories.melted-gold-in-installments": "طلای آب‌شده اقساطی",
+    "categories.parsian-gold-coin": "سکه پارسیان",
     "enums.CaratEnum.CARAT_18": "۱۸ عیار",
     "enums.CaratEnum.CARAT_24": "۲۴ عیار",
     "enums.CaratEnum.CARAT_900": "۹۰۰ عیار",
     "enums.CaratEnum.CARAT_9999": "۹۹۹٫۹ عیار",
-    "categories.bullion-pack": "پک شمش و پلاک طلا",
-    "categories.bullion": "شمش طلا",
-    "categories.parsian-gold-coin": "سکه پارسیان",
-    "categories.melt-gold": "طلای آب‌شده",
-    "categories.melted-gold-in-installments": "طلای آب‌شده اقساطی",
-    "categories.gold-coin-bullion-molten-gold": "سکه، شمش و طلای آب‌شده"
+    "enums.SourceEnum.DIGIKALA": "دیجی‌کالا",
+    "enums.SourceEnum.SNAPSHOP": "اسنپ‌شاپ"
 }
