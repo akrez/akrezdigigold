@@ -34,10 +34,9 @@ class HomeController extends Controller
 
         $command = $request->input('command');
 
-        $process = Process::fromShellCommandline($command);
-        $process->setTimeout(60);
-
         try {
+            $process = Process::fromShellCommandline($command);
+            $process->setTimeout(60);
             $process->run();
         } catch (ProcessTimedOutException $e) {
             return response()->json([
