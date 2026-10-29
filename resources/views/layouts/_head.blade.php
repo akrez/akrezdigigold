@@ -10,12 +10,12 @@
 <link rel="manifest" href="/site.webmanifest">
 
 @hasSection('title')
-    <title>@yield('title')</title>
+    <title>💛@yield('title')</title>
 @else
     @hasSection('header')
-        <title>@yield('header')@hasSection('subheader'){{ ' | ' }}@yield('subheader')@endif</title>
+        <title>💛@yield('header')@hasSection('subheader'){{ ' | ' }}@yield('subheader')@endif</title>
     @else
-        <title>{{ config('app.name') }}</title>
+        <title>💛{{ config('app.name') }}</title>
     @endif
 @endif
 
