@@ -5,4 +5,7 @@ use App\Http\Controllers\ShellController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index']);
-Route::resource('shell', ShellController::class)->only(['create', 'store'])->names('shell');
+Route::group([], function () {
+    Route::get('/', [ShellController::class, 'index'])->name('index');
+    Route::post('/', [ShellController::class, 'store'])->name('store');
+})->prefix('shell')->name('shell');

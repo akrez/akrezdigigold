@@ -10,9 +10,9 @@ use Symfony\Component\Process\Process;
 
 class ShellController extends Controller
 {
-    public function create(Request $request): View
+    public function index(Request $request): View
     {
-        return view('shell.create', []);
+        return view('shell.index', []);
     }
 
     public function store(Request $request): JsonResponse
