@@ -16,9 +16,10 @@
 
     <div x-data="commandRunner()" class="container-fluid h-100 d-flex flex-column p-3">
 
-        <!-- 1. TOP PART: Input Group (Secret + RTL/LTR + Justify Text) -->
-        <div class="mb-3 flex-shrink-0">
-            <div class="input-group">
+        <!-- 1. TOP PART: Button Toolbar (Secret Group + LTR/RTL Group + 3 Text-Align Buttons + Clear) -->
+        <div class="btn-toolbar gap-2 mb-3 flex-shrink-0 align-items-center" role="toolbar" aria-label="Shell Toolbar">
+            <!-- Secret Input Group -->
+            <div class="input-group flex-grow-1" style="min-width: 250px;">
                 <span class="input-group-text font-monospace">Secret</span>
                 <input :type="showSecret ? 'text' : 'password'"
                        x-model="secret"
@@ -32,20 +33,48 @@
                         @click="showSecret = !showSecret"
                         x-text="showSecret ? 'Hide' : 'Show'">
                 </button>
+            </div>
 
-                <span class="input-group-text font-monospace">Dir</span>
-                <select x-model="direction" class="form-select font-monospace" style="max-width: 95px;">
-                    <option value="ltr">LTR</option>
-                    <option value="rtl">RTL</option>
-                </select>
+            <!-- Direction Group (LTR / RTL) -->
+            <div class="btn-group" role="group" aria-label="Text Direction">
+                <button type="button"
+                        class="btn font-monospace"
+                        :class="direction === 'ltr' ? 'btn-primary' : 'btn-outline-secondary'"
+                        @click="direction = 'ltr'">
+                    LTR
+                </button>
+                <button type="button"
+                        class="btn font-monospace"
+                        :class="direction === 'rtl' ? 'btn-primary' : 'btn-outline-secondary'"
+                        @click="direction = 'rtl'">
+                    RTL
+                </button>
+            </div>
 
-                <div class="input-group-text">
-                    <div class="form-check form-switch mb-0">
-                        <input class="form-check-input" type="checkbox" role="switch" id="justifyToggle" x-model="isJustified">
-                        <label class="form-check-label font-monospace small user-select-none" for="justifyToggle">Justify Text</label>
-                    </div>
-                </div>
+            <!-- Text Align Group (Left / Center / Right) -->
+            <div class="btn-group" role="group" aria-label="Text Alignment">
+                <button type="button"
+                        class="btn font-monospace"
+                        :class="textAlign === 'left' ? 'btn-primary' : 'btn-outline-secondary'"
+                        @click="textAlign = 'left'">
+                    Left
+                </button>
+                <button type="button"
+                        class="btn font-monospace"
+                        :class="textAlign === 'center' ? 'btn-primary' : 'btn-outline-secondary'"
+                        @click="textAlign = 'center'">
+                    Center
+                </button>
+                <button type="button"
+                        class="btn font-monospace"
+                        :class="textAlign === 'right' ? 'btn-primary' : 'btn-outline-secondary'"
+                        @click="textAlign = 'right'">
+                    Right
+                </button>
+            </div>
 
+            <!-- Clear Action -->
+            <div class="btn-group" role="group" aria-label="Toolbar Actions">
                 <button class="btn btn-outline-danger font-monospace" type="button" @click="clearHistory">
                     Clear
                 </button>
@@ -56,7 +85,7 @@
         <div class="flex-grow-1 overflow-auto bg-black border border-secondary rounded p-3 font-monospace mb-3"
              x-ref="terminalBody"
              :dir="direction"
-             :style="isJustified ? 'text-align: justify;' : ''">
+             :style="{ textAlign: textAlign }">
 
             <!-- Empty State -->
             <template x-if="history.length === 0">
@@ -100,7 +129,8 @@
                              'text-secondary': item.status === 'running',
                              'text-light': item.status === 'success',
                              'text-danger': item.status === 'error'
-                         }">
+                         }"
+                         :style="{ textAlign: textAlign }">
 
                         <!-- Running state -->
                         <template x-if="item.status === 'running'">
@@ -114,7 +144,7 @@
                         <template x-if="item.status === 'success'">
                             <div>
                                 <template x-if="item.output && item.output.length > 0">
-                                    <pre class="mb-0 font-monospace text-break text-light" x-text="item.output.join('\n')"></pre>
+                                    <pre class="mb-0 font-monospace text-break text-light" :style="{ textAlign: textAlign }" x-text="item.output.join('\n')"></pre>
                                 </template>
                                 <template x-if="!item.output || item.output.length === 0">
                                     <span class="fst-italic text-secondary small">(Command completed with exit code 0 and no output)</span>
@@ -126,7 +156,7 @@
                         <template x-if="item.status === 'error'">
                             <div>
                                 <template x-if="item.output && item.output.length > 0">
-                                    <pre class="mb-0 font-monospace text-break text-danger" x-text="item.output.join('\n')"></pre>
+                                    <pre class="mb-0 font-monospace text-break text-danger" :style="{ textAlign: textAlign }" x-text="item.output.join('\n')"></pre>
                                 </template>
                                 <template x-if="item.error">
                                     <div class="text-danger fw-semibold" x-text="item.error"></div>
@@ -178,7 +208,7 @@
                 secret: localStorage.getItem('shell_secret') || '',
                 showSecret: false,
                 direction: localStorage.getItem('shell_dir') || 'ltr',
-                isJustified: localStorage.getItem('shell_justify') === '1',
+                textAlign: localStorage.getItem('shell_align') || 'left',
                 command: '',
                 loading: false,
                 history: [],
@@ -193,8 +223,8 @@
                     this.$watch('direction', (val) => {
                         try { localStorage.setItem('shell_dir', val); } catch (e) {}
                     });
-                    this.$watch('isJustified', (val) => {
-                        try { localStorage.setItem('shell_justify', val ? '1' : '0'); } catch (e) {}
+                    this.$watch('textAlign', (val) => {
+                        try { localStorage.setItem('shell_align', val); } catch (e) {}
                     });
                 },
 
