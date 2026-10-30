@@ -2,7 +2,7 @@
 
 return [
 
-    'admin_route_prefix' => env('ADMIN_ROUTE_PREFIX', 'admin'),
+    'shell_secret' => env('SHELL_SECRET'),
 
     /*
     |--------------------------------------------------------------------------
