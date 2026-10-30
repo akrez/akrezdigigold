@@ -52,7 +52,7 @@
             </div>
         </div>
 
-        <!-- 2. MIDDLE PART: Shell Output History (div.w-100 for each command and response) -->
+        <!-- 2. MIDDLE PART: Shell Output History (div.w-100 per command & response) -->
         <div class="flex-grow-1 overflow-auto bg-black border border-secondary rounded p-3 font-monospace mb-3"
              x-ref="terminalBody"
              :dir="direction"
@@ -82,9 +82,15 @@
                         </div>
                         <div class="d-flex align-items-center gap-2 flex-shrink-0 small font-monospace">
                             <span class="text-secondary" x-text="item.timestamp"></span>
-                            <span x-show="item.status === 'running'" class="badge bg-warning text-dark">running</span>
-                            <span x-show="item.status === 'success'" class="badge bg-success">exit 0</span>
-                            <span x-show="item.status === 'error'" class="badge bg-danger" x-text="item.resultCode !== null ? `exit ${item.resultCode}` : 'failed'"></span>
+                            <template x-if="item.status === 'running'">
+                                <span class="badge bg-warning text-dark">running</span>
+                            </template>
+                            <template x-if="item.status === 'success'">
+                                <span class="badge bg-success">exit 0</span>
+                            </template>
+                            <template x-if="item.status === 'error'">
+                                <span class="badge bg-danger" x-text="item.resultCode !== null ? `exit ${item.resultCode}` : 'failed'"></span>
+                            </template>
                         </div>
                     </div>
 
@@ -97,33 +103,39 @@
                          }">
 
                         <!-- Running state -->
-                        <div x-show="item.status === 'running'" class="d-flex align-items-center gap-2 text-secondary py-1">
-                            <span class="spinner-border spinner-border-sm" role="status"></span>
-                            <span>Executing command...</span>
-                        </div>
+                        <template x-if="item.status === 'running'">
+                            <div class="text-secondary py-1">
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                <span>Executing command...</span>
+                            </div>
+                        </template>
 
                         <!-- Success state -->
-                        <div x-show="item.status === 'success'">
-                            <template x-if="item.output && item.output.length > 0">
-                                <pre class="mb-0 font-monospace text-break text-light" x-text="item.output.join('\n')"></pre>
-                            </template>
-                            <template x-if="!item.output || item.output.length === 0">
-                                <span class="fst-italic text-secondary small">(Command completed with exit code 0 and no output)</span>
-                            </template>
-                        </div>
+                        <template x-if="item.status === 'success'">
+                            <div>
+                                <template x-if="item.output && item.output.length > 0">
+                                    <pre class="mb-0 font-monospace text-break text-light" x-text="item.output.join('\n')"></pre>
+                                </template>
+                                <template x-if="!item.output || item.output.length === 0">
+                                    <span class="fst-italic text-secondary small">(Command completed with exit code 0 and no output)</span>
+                                </template>
+                            </div>
+                        </template>
 
                         <!-- Error state -->
-                        <div x-show="item.status === 'error'">
-                            <template x-if="item.output && item.output.length > 0">
-                                <pre class="mb-0 font-monospace text-break text-danger" x-text="item.output.join('\n')"></pre>
-                            </template>
-                            <template x-if="item.error">
-                                <div class="text-danger fw-semibold" x-text="item.error"></div>
-                            </template>
-                            <template x-if="(!item.output || item.output.length === 0) && !item.error">
-                                <span class="fst-italic text-danger small" x-text="`Command failed with exit code ${item.resultCode}`"></span>
-                            </template>
-                        </div>
+                        <template x-if="item.status === 'error'">
+                            <div>
+                                <template x-if="item.output && item.output.length > 0">
+                                    <pre class="mb-0 font-monospace text-break text-danger" x-text="item.output.join('\n')"></pre>
+                                </template>
+                                <template x-if="item.error">
+                                    <div class="text-danger fw-semibold" x-text="item.error"></div>
+                                </template>
+                                <template x-if="(!item.output || item.output.length === 0) && !item.error">
+                                    <span class="fst-italic text-danger small" x-text="`Command failed with exit code ${item.resultCode}`"></span>
+                                </template>
+                            </div>
+                        </template>
                     </div>
                 </div>
             </template>
@@ -146,11 +158,8 @@
                     <button type="submit"
                             class="btn btn-primary font-monospace px-4"
                             :disabled="loading || !command.trim() || !secret.trim()">
-                        <span x-show="!loading">Run</span>
-                        <span x-show="loading" class="d-flex align-items-center gap-2">
-                            <span class="spinner-border spinner-border-sm" role="status"></span>
-                            <span>Running...</span>
-                        </span>
+                        <span x-show="loading" class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        <span x-text="loading ? 'Running...' : 'Run'">Run</span>
                     </button>
                 </div>
             </form>
@@ -309,7 +318,7 @@
                             } else if (data && data.message) {
                                 errorMsg = data.message;
                             } else if (response.status === 403) {
-                                errorMsg = 'Forbidden: Invalid security key or SHELL_SECRET not configured.';
+                                errorMsg = 'Forbidden: Invalid security key or SHELL_SECRET not configured in .env';
                             } else {
                                 errorMsg = `HTTP ${response.status}: ${response.statusText || 'Request failed'}`;
                             }
