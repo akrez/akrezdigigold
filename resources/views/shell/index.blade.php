@@ -52,118 +52,81 @@
             </div>
         </div>
 
-        <!-- 2. MIDDLE PART: Shell Container with Command History & Responses -->
-        <div class="card flex-grow-1 overflow-hidden mb-3 border-secondary">
-            <!-- Terminal Header -->
-            <div class="card-header bg-body-tertiary d-flex align-items-center justify-content-between py-2 border-secondary font-monospace small user-select-none flex-shrink-0">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge rounded-pill bg-danger p-1"></span>
-                    <span class="badge rounded-pill bg-warning p-1"></span>
-                    <span class="badge rounded-pill bg-success p-1"></span>
-                    <span class="ms-1 text-secondary">shell@terminal</span>
+        <!-- 2. MIDDLE PART: Shell Output History (div.w-100 for each command and response) -->
+        <div class="flex-grow-1 overflow-auto bg-black border border-secondary rounded p-3 font-monospace mb-3"
+             x-ref="terminalBody"
+             :dir="direction"
+             :style="isJustified ? 'text-align: justify;' : ''">
+
+            <!-- Empty State -->
+            <template x-if="history.length === 0">
+                <div class="h-100 d-flex flex-column align-items-center justify-content-center text-secondary py-5 user-select-none">
+                    <div class="fs-4 opacity-50 mb-2">&gt;_</div>
+                    <div class="small">Terminal ready. Enter secret above and type a command below.</div>
                 </div>
-                <div class="d-flex align-items-center gap-3 text-secondary">
-                    <span x-show="loading" class="text-warning">executing...</span>
-                    <span x-text="`${history.length} item${history.length === 1 ? '' : 's'}`"></span>
-                </div>
-            </div>
+            </template>
 
-            <!-- Terminal Output History -->
-            <div class="card-body overflow-auto p-3 font-monospace"
-                 x-ref="terminalBody"
-                 :dir="direction"
-                 :style="isJustified ? 'text-align: justify;' : ''">
-
-                <!-- Empty State -->
-                <template x-if="history.length === 0">
-                    <div class="h-100 d-flex flex-column align-items-center justify-content-center text-secondary py-5 user-select-none">
-                        <div class="fs-4 opacity-50 mb-2">&gt;_</div>
-                        <div class="small">Terminal ready. Enter secret above and type a command below.</div>
-                    </div>
-                </template>
-
-                <!-- History Records Loop -->
-                <template x-for="(item, index) in history" :key="item.id">
-                    <div class="card mb-3"
+            <!-- Command & Response List -->
+            <template x-for="(item, index) in history" :key="item.id">
+                <div class="w-100 mb-3">
+                    <!-- Command Div (div.w-100) -->
+                    <div class="w-100 d-flex align-items-center justify-content-between font-monospace"
                          :class="{
-                             'border-secondary': item.status === 'running',
-                             'border-success': item.status === 'success',
-                             'border-danger': item.status === 'error'
+                             'text-warning': item.status === 'running',
+                             'text-success': item.status === 'success',
+                             'text-danger': item.status === 'error'
                          }">
-                        <!-- Command Div -->
-                        <div class="card-header d-flex align-items-center justify-content-between py-2 font-monospace"
-                             :class="{
-                                 'bg-body-secondary text-body': item.status === 'running',
-                                 'bg-success-subtle text-success-emphasis': item.status === 'success',
-                                 'bg-danger-subtle text-danger-emphasis': item.status === 'error'
-                             }">
-                            <div class="d-flex align-items-center gap-2 text-break flex-grow-1 me-2">
-                                <span class="fw-bold"
-                                      :class="{
-                                          'text-secondary': item.status === 'running',
-                                          'text-success': item.status === 'success',
-                                          'text-danger': item.status === 'error'
-                                      }">$</span>
-                                <span class="fw-semibold" x-text="item.command"></span>
-                            </div>
+                        <div class="d-flex align-items-center gap-2 text-break flex-grow-1 me-2">
+                            <span class="fw-bold">$</span>
+                            <span class="fw-semibold" x-text="item.command"></span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 flex-shrink-0 small font-monospace">
+                            <span class="text-secondary" x-text="item.timestamp"></span>
+                            <span x-show="item.status === 'running'" class="badge bg-warning text-dark">running</span>
+                            <span x-show="item.status === 'success'" class="badge bg-success">exit 0</span>
+                            <span x-show="item.status === 'error'" class="badge bg-danger" x-text="item.resultCode !== null ? `exit ${item.resultCode}` : 'failed'"></span>
+                        </div>
+                    </div>
 
-                            <div class="d-flex align-items-center gap-2 flex-shrink-0 small font-monospace">
-                                <span class="text-secondary" x-text="item.timestamp"></span>
-                                <template x-if="item.status === 'running'">
-                                    <span class="badge bg-warning text-dark">running</span>
-                                </template>
-                                <template x-if="item.status === 'success'">
-                                    <span class="badge bg-success">exit 0</span>
-                                </template>
-                                <template x-if="item.status === 'error'">
-                                    <span class="badge bg-danger" x-text="item.resultCode !== null ? `exit ${item.resultCode}` : 'failed'"></span>
-                                </template>
-                            </div>
+                    <!-- Response Div (under the command div) -->
+                    <div class="w-100 mt-1 font-monospace"
+                         :class="{
+                             'text-secondary': item.status === 'running',
+                             'text-light': item.status === 'success',
+                             'text-danger': item.status === 'error'
+                         }">
+
+                        <!-- Running state -->
+                        <div x-show="item.status === 'running'" class="d-flex align-items-center gap-2 text-secondary py-1">
+                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                            <span>Executing command...</span>
                         </div>
 
-                        <!-- Response Div -->
-                        <div class="card-body p-3 font-monospace"
-                             :class="{
-                                 'bg-body-tertiary text-body-secondary': item.status === 'running',
-                                 'bg-body-tertiary text-success': item.status === 'success',
-                                 'bg-body-tertiary text-danger': item.status === 'error'
-                             }">
-
-                            <template x-if="item.status === 'running'">
-                                <div class="d-flex align-items-center gap-2 text-secondary py-1">
-                                    <span class="spinner-border spinner-border-sm" role="status"></span>
-                                    <span>Executing command...</span>
-                                </div>
+                        <!-- Success state -->
+                        <div x-show="item.status === 'success'">
+                            <template x-if="item.output && item.output.length > 0">
+                                <pre class="mb-0 font-monospace text-break text-light" x-text="item.output.join('\n')"></pre>
                             </template>
-
-                            <template x-if="item.status === 'success'">
-                                <div>
-                                    <template x-if="item.output && item.output.length > 0">
-                                        <pre class="mb-0 font-monospace text-break text-success" x-text="item.output.join('\n')"></pre>
-                                    </template>
-                                    <template x-if="!item.output || item.output.length === 0">
-                                        <span class="fst-italic text-secondary small">(Command completed with exit code 0 and no output)</span>
-                                    </template>
-                                </div>
+                            <template x-if="!item.output || item.output.length === 0">
+                                <span class="fst-italic text-secondary small">(Command completed with exit code 0 and no output)</span>
                             </template>
+                        </div>
 
-                            <template x-if="item.status === 'error'">
-                                <div>
-                                    <template x-if="item.output && item.output.length > 0">
-                                        <pre class="mb-0 font-monospace text-break text-danger" x-text="item.output.join('\n')"></pre>
-                                    </template>
-                                    <template x-if="item.error">
-                                        <div class="text-danger fw-semibold" x-text="item.error"></div>
-                                    </template>
-                                    <template x-if="(!item.output || item.output.length === 0) && !item.error">
-                                        <span class="fst-italic text-danger small" x-text="`Command failed with exit code ${item.resultCode}`"></span>
-                                    </template>
-                                </div>
+                        <!-- Error state -->
+                        <div x-show="item.status === 'error'">
+                            <template x-if="item.output && item.output.length > 0">
+                                <pre class="mb-0 font-monospace text-break text-danger" x-text="item.output.join('\n')"></pre>
+                            </template>
+                            <template x-if="item.error">
+                                <div class="text-danger fw-semibold" x-text="item.error"></div>
+                            </template>
+                            <template x-if="(!item.output || item.output.length === 0) && !item.error">
+                                <span class="fst-italic text-danger small" x-text="`Command failed with exit code ${item.resultCode}`"></span>
                             </template>
                         </div>
                     </div>
-                </template>
-            </div>
+                </div>
+            </template>
         </div>
 
         <!-- 3. BOTTOM PART: Command Input and Submit -->
@@ -183,15 +146,11 @@
                     <button type="submit"
                             class="btn btn-primary font-monospace px-4"
                             :disabled="loading || !command.trim() || !secret.trim()">
-                        <template x-if="!loading">
-                            <span>Run</span>
-                        </template>
-                        <template x-if="loading">
-                            <span class="d-flex align-items-center gap-2">
-                                <span class="spinner-border spinner-border-sm" role="status"></span>
-                                <span>Running...</span>
-                            </span>
-                        </template>
+                        <span x-show="!loading">Run</span>
+                        <span x-show="loading" class="d-flex align-items-center gap-2">
+                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                            <span>Running...</span>
+                        </span>
                     </button>
                 </div>
             </form>
@@ -293,17 +252,19 @@
                     this.commandDraft = '';
                     this.command = '';
 
-                    const entry = {
-                        id: Date.now() + Math.random(),
-                        command: command,
-                        timestamp: new Date().toLocaleTimeString(),
-                        status: 'running',
-                        resultCode: null,
-                        output: [],
-                        error: null,
-                    };
-
-                    this.history.push(entry);
+                    const id = Date.now() + Math.random();
+                    this.history = [
+                        ...this.history,
+                        {
+                            id: id,
+                            command: command,
+                            timestamp: new Date().toLocaleTimeString(),
+                            status: 'running',
+                            resultCode: null,
+                            output: [],
+                            error: null,
+                        }
+                    ];
                     this.loading = true;
 
                     this.$nextTick(() => {
@@ -329,25 +290,56 @@
                             data = await response.json();
                         } catch (e) {}
 
+                        let isSuccess = false;
+                        let resultCode = null;
+                        let output = [];
+                        let errorMsg = null;
+
                         if (response.ok && data) {
-                            entry.resultCode = data.resultCode;
-                            entry.output = Array.isArray(data.output) ? data.output : [];
-                            entry.status = (data.resultCode === 0) ? 'success' : 'error';
+                            resultCode = data.resultCode;
+                            output = Array.isArray(data.output) ? data.output : [];
+                            isSuccess = (data.resultCode === 0);
+                            if (!isSuccess && output.length === 0) {
+                                errorMsg = `Command exited with code ${data.resultCode}`;
+                            }
                         } else {
-                            entry.status = 'error';
-                            entry.resultCode = (data && data.resultCode !== undefined) ? data.resultCode : response.status;
+                            resultCode = (data && data.resultCode !== undefined) ? data.resultCode : response.status;
                             if (data && data.output && data.output.length) {
-                                entry.output = Array.isArray(data.output) ? data.output : [data.output];
+                                output = Array.isArray(data.output) ? data.output : [data.output];
                             } else if (data && data.message) {
-                                entry.error = data.message;
+                                errorMsg = data.message;
+                            } else if (response.status === 403) {
+                                errorMsg = 'Forbidden: Invalid security key or SHELL_SECRET not configured.';
                             } else {
-                                entry.error = `HTTP ${response.status}: ${response.statusText || 'Request failed'}`;
+                                errorMsg = `HTTP ${response.status}: ${response.statusText || 'Request failed'}`;
                             }
                         }
+
+                        this.history = this.history.map(item => {
+                            if (item.id === id) {
+                                return {
+                                    ...item,
+                                    status: isSuccess ? 'success' : 'error',
+                                    resultCode: resultCode,
+                                    output: output,
+                                    error: errorMsg,
+                                };
+                            }
+                            return item;
+                        });
                     } catch (error) {
-                        entry.status = 'error';
-                        entry.resultCode = -1;
-                        entry.error = error.message || 'Network error occurred';
+                        this.history = this.history.map(item => {
+                            if (item.id === id) {
+                                return {
+                                    ...item,
+                                    status: 'error',
+                                    resultCode: -1,
+                                    output: [],
+                                    error: error.message || 'Network error occurred',
+                                };
+                            }
+                            return item;
+                        });
                     } finally {
                         this.loading = false;
                         this.$nextTick(() => {

@@ -5,9 +5,9 @@ beforeEach(function () {
 });
 
 test('the shell page can be displayed', function () {
-    $this->get(route('shell.create'))
+    $this->get(route('shell.index'))
         ->assertOk()
-        ->assertViewIs('shell.create');
+        ->assertViewIs('shell.index');
 });
 
 test('the shell command requires a secret', function () {
