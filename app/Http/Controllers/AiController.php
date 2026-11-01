@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
 
 class AiController extends Controller
@@ -17,25 +17,25 @@ class AiController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'api_base_url' => ['required', 'url'],
-            'api_key' => ['required', 'string'],
-            'model' => ['required', 'string'],
-            'prompt' => ['required', 'string'],
-            'secret' => ['required', 'string'],
-        ]);
-
-        $shellSecret = (string) config('app.shell_secret');
-        $secret = (string) $data['secret'];
-
-        abort_unless($shellSecret !== '' && hash_equals($shellSecret, $secret), 403);
-
         try {
-            $agentPath = base_path('agent');
+
+            $data = $request->validate([
+                'api_base_url' => ['required', 'url'],
+                'api_key' => ['required', 'string'],
+                'model' => ['required', 'string'],
+                'prompt' => ['required', 'string'],
+                'secret' => ['required', 'string'],
+            ]);
+
+            $shellSecret = (string) config('app.shell_secret');
+            $secret = (string) $data['secret'];
+
+            throw_unless($shellSecret !== '' && hash_equals($shellSecret, $secret), new Exception('Forbidden: Invalid secret', 403));
+
             $workingDir = base_path();
 
             $process = new Process([
-                $agentPath,
+                $workingDir.'/agent',
                 '--provider', 'openai',
                 '--api-base-url', $data['api_base_url'],
                 '--api-key', $data['api_key'],
@@ -50,22 +50,19 @@ class AiController extends Controller
 
             $combined = trim($process->getOutput().$process->getErrorOutput());
 
-            $output = $combined === ''
-                ? []
-                : preg_split('/\r\n|\r|\n/', $combined);
+            $output = $combined === '' ? [] : preg_split('/\r\n|\r|\n/', $combined);
 
-            return response()->json([
-                'isSuccess' => $process->isSuccessful(),
-                'resultCode' => $process->getExitCode(),
-                'output' => $output,
-            ]);
-
-        } catch (ProcessTimedOutException $e) {
-            return response()->json([
-                'isSuccess' => false,
-                'resultCode' => -1,
-                'output' => ['ERROR'],
-            ], 408);
+            return $this->makeStoreResponse($process->isSuccessful(), $output);
+        } catch (Exception $e) {
+            return $this->makeStoreResponse(false, [$e->getMessage()]);
         }
+    }
+
+    protected function makeStoreResponse(bool $isSuccess = false, array $output = [])
+    {
+        return response()->json([
+            'isSuccess' => $isSuccess,
+            'output' => $output,
+        ], $isSuccess ? 200 : 500);
     }
 }
