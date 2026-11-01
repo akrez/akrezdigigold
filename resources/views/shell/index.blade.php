@@ -12,23 +12,21 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
 </head>
 
-<body class="vh-100 overflow-hidden">
+<body class="vh-100 overflow-hidden font-monospace">
 
     <div x-data="commandRunner()" class="container-fluid h-100 d-flex flex-column p-3">
 
-        <!-- 1. TOP PART: Button Toolbar (Secret Group + LTR/RTL Group + 3 Text-Align Buttons + Clear) -->
         <div class="btn-toolbar gap-2 mb-3 flex-shrink-0 align-items-center" role="toolbar" aria-label="Shell Toolbar">
-            <!-- Secret Input Group -->
-            <div class="input-group flex-grow-1" style="min-width: 250px;">
-                <span class="input-group-text font-monospace">Secret</span>
+            <div class="input-group flex-grow-1">
+                <span class="input-group-text">Secret</span>
                 <input :type="showSecret ? 'text' : 'password'"
                        x-model="secret"
-                       class="form-control font-monospace"
+                       class="form-control"
                        placeholder="Security key"
                        :disabled="loading"
                        autocomplete="off"
                        autofocus>
-                <button class="btn btn-outline-secondary font-monospace"
+                <button class="btn btn-outline-secondary"
                         type="button"
                         @click="showSecret = !showSecret"
                         x-text="showSecret ? 'Hide' : 'Show'">
@@ -38,13 +36,13 @@
             <!-- Direction Group (LTR / RTL) -->
             <div class="btn-group" role="group" aria-label="Text Direction">
                 <button type="button"
-                        class="btn font-monospace"
+                        class="btn"
                         :class="direction === 'ltr' ? 'btn-primary' : 'btn-outline-secondary'"
                         @click="direction = 'ltr'">
                     LTR
                 </button>
                 <button type="button"
-                        class="btn font-monospace"
+                        class="btn"
                         :class="direction === 'rtl' ? 'btn-primary' : 'btn-outline-secondary'"
                         @click="direction = 'rtl'">
                     RTL
@@ -54,19 +52,19 @@
             <!-- Text Align Group (Left / Center / Right) -->
             <div class="btn-group" role="group" aria-label="Text Alignment">
                 <button type="button"
-                        class="btn font-monospace"
+                        class="btn"
                         :class="textAlign === 'left' ? 'btn-primary' : 'btn-outline-secondary'"
                         @click="textAlign = 'left'">
                     Left
                 </button>
                 <button type="button"
-                        class="btn font-monospace"
+                        class="btn"
                         :class="textAlign === 'center' ? 'btn-primary' : 'btn-outline-secondary'"
                         @click="textAlign = 'center'">
                     Center
                 </button>
                 <button type="button"
-                        class="btn font-monospace"
+                        class="btn"
                         :class="textAlign === 'right' ? 'btn-primary' : 'btn-outline-secondary'"
                         @click="textAlign = 'right'">
                     Right
@@ -75,14 +73,14 @@
 
             <!-- Clear Action -->
             <div class="btn-group" role="group" aria-label="Toolbar Actions">
-                <button class="btn btn-outline-danger font-monospace" type="button" @click="clearHistory">
+                <button class="btn btn-outline-danger" type="button" @click="clearHistory">
                     Clear
                 </button>
             </div>
         </div>
 
         <!-- 2. MIDDLE PART: Shell Output History (div.w-100 per command & response) -->
-        <div class="flex-grow-1 overflow-auto bg-black border border-secondary rounded p-3 font-monospace mb-3"
+        <div class="flex-grow-1 overflow-auto bg-black border border-secondary rounded p-3 mb-3"
              x-ref="terminalBody"
              :dir="direction"
              :style="{ textAlign: textAlign }">
@@ -99,7 +97,7 @@
             <template x-for="(item, index) in history" :key="item.id">
                 <div class="w-100 mb-3">
                     <!-- Command Div (div.w-100) -->
-                    <div class="w-100 d-flex align-items-center justify-content-between font-monospace"
+                    <div class="w-100 d-flex align-items-center justify-content-between"
                          :class="{
                              'text-warning': item.status === 'running',
                              'text-success': item.status === 'success',
@@ -107,9 +105,7 @@
                          }">
                         <div class="d-flex align-items-center gap-2 text-break flex-grow-1 me-2">
                             <span class="fw-bold">$</span>
-                            <span class="fw-semibold" x-text="item.command"></span>
-                        </div>
-                        <div class="d-flex align-items-center gap-2 flex-shrink-0 small font-monospace">
+                            <span class="fw-semibold flex-grow-1" x-text="item.command"></span>
                             <span class="text-secondary" x-text="item.timestamp"></span>
                             <template x-if="item.status === 'running'">
                                 <span class="badge bg-warning text-dark">running</span>
@@ -124,7 +120,7 @@
                     </div>
 
                     <!-- Response Div (under the command div) -->
-                    <div class="w-100 mt-1 font-monospace"
+                    <div class="w-100 mt-1"
                          :class="{
                              'text-secondary': item.status === 'running',
                              'text-light': item.status === 'success',
@@ -144,7 +140,7 @@
                         <template x-if="item.status === 'success'">
                             <div>
                                 <template x-if="item.output && item.output.length > 0">
-                                    <pre class="mb-0 font-monospace text-break text-light" :style="{ textAlign: textAlign }" x-text="item.output.join('\n')"></pre>
+                                    <pre class="mb-0 text-break text-light" :style="{ textAlign: textAlign }" x-text="item.output.join('\n')"></pre>
                                 </template>
                                 <template x-if="!item.output || item.output.length === 0">
                                     <span class="fst-italic text-secondary small">(Command completed with exit code 0 and no output)</span>
@@ -156,7 +152,7 @@
                         <template x-if="item.status === 'error'">
                             <div>
                                 <template x-if="item.output && item.output.length > 0">
-                                    <pre class="mb-0 font-monospace text-break text-danger" :style="{ textAlign: textAlign }" x-text="item.output.join('\n')"></pre>
+                                    <pre class="mb-0 text-break text-danger" :style="{ textAlign: textAlign }" x-text="item.output.join('\n')"></pre>
                                 </template>
                                 <template x-if="item.error">
                                     <div class="text-danger fw-semibold" x-text="item.error"></div>
@@ -175,18 +171,18 @@
         <div class="flex-shrink-0">
             <form @submit.prevent="run">
                 <div class="input-group">
-                    <span class="input-group-text font-monospace fw-bold text-success">$</span>
+                    <span class="input-group-text fw-bold text-success">$</span>
                     <input type="text"
                            x-model="command"
                            x-ref="commandInput"
                            @keydown.up.prevent="historyUp"
                            @keydown.down.prevent="historyDown"
-                           class="form-control font-monospace"
+                           class="form-control"
                            placeholder="Type a command and press Enter (e.g. dir, ls -la, git status, php artisan)..."
                            :disabled="loading"
                            autocomplete="off">
                     <button type="submit"
-                            class="btn btn-primary font-monospace px-4"
+                            class="btn btn-primary px-4"
                             :disabled="loading || !command.trim() || !secret.trim()">
                         <span x-show="loading" class="spinner-border spinner-border-sm me-1" role="status"></span>
                         <span x-text="loading ? 'Running...' : 'Run'">Run</span>
