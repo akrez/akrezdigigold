@@ -178,7 +178,6 @@
                            @keydown.up.prevent="historyUp"
                            @keydown.down.prevent="historyDown"
                            class="form-control"
-                           placeholder="Type a command and press Enter (e.g. dir, ls -la, git status, php artisan)..."
                            :disabled="loading"
                            autocomplete="off">
                     <button type="submit"
