@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Enums\SourceEnum;
 use App\Services\Prices\DigikalaPriceService;
+use App\Services\Prices\EcogoldPriceService;
 use App\Services\Prices\MelligoldPriceService;
 use App\Services\Prices\MilligoldPriceService;
 use App\Services\Prices\TalaseaPriceService;
@@ -47,6 +48,7 @@ class PriceFetchCommand extends Command
             SourceEnum::TALASEA->name => TalaseaPriceService::class,
             SourceEnum::MELLIGOLD->name => MelligoldPriceService::class,
             SourceEnum::MILLIGOLD->name => MilligoldPriceService::class,
+            SourceEnum::ECOGOLD->name => EcogoldPriceService::class,
         ];
         if (! $serviceName) {
             return array_values($services);

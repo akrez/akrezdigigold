@@ -13,4 +13,5 @@ enum SourceEnum
     case TALASEA;
     case MELLIGOLD;
     case MILLIGOLD;
+    case ECOGOLD;
 }

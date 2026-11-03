@@ -11,5 +11,6 @@
     "enums.CaratEnum.CARAT_900": "۹۰۰ عیار",
     "enums.CaratEnum.CARAT_9999": "۹۹۹٫۹ عیار",
     "enums.SourceEnum.DIGIKALA": "دیجی‌کالا",
-    "enums.SourceEnum.SNAPSHOP": "اسنپ‌شاپ"
+    "enums.SourceEnum.SNAPSHOP": "اسنپ‌شاپ",
+    "enums.SourceEnum.ECOGOLD": "اکوگولد"
 }

@@ -11,5 +11,6 @@
     "enums.CaratEnum.CARAT_900": "900 carat",
     "enums.CaratEnum.CARAT_9999": "999.9 carat",
     "enums.SourceEnum.DIGIKALA": "Digikala",
-    "enums.SourceEnum.SNAPSHOP": "Snapshop"
+    "enums.SourceEnum.SNAPSHOP": "Snapshop",
+    "enums.SourceEnum.ECOGOLD": "Ecogold"
 }
