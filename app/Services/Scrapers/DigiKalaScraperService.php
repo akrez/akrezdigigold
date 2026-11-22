@@ -195,7 +195,7 @@ class DigiKalaScraperService extends ScraperService
             fn ($productId) => $pool->as($productId)
                 ->withHeaders($this->getHeaders())
                 ->timeout(30)
-                ->get(self::API_BASE."/v2/product/{$productId}/")
+                ->get(self::API_BASE."/product/v1/products/{$productId}/")
         )->toArray());
     }
 
